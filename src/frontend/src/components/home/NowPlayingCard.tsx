@@ -12,7 +12,7 @@ export const NowPlayingCard = ({
   duration,
 }: NowPlayingCardProps) => {
   return (
-    <div className="w-full h-auto aspect-[15/16] bg-abu-abu shadow-md rounded-xl flex flex-col items-center py-8 space-y-8">
+    <div className="w-full h-auto aspect-[15/16] bg-white shadow-md rounded-xl flex flex-col items-center py-8 space-y-8">
         <Image
           src={imgSrc}
           alt="Now Playing"

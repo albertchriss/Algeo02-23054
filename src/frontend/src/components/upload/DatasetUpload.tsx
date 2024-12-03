@@ -60,7 +60,6 @@ export const DatasetUpload = ({ types }: DatasetUploadProps) => {
         });
       }
     } catch (error) {
-      console.error(error);
       toast({
         title: "Failed to upload file.",
         description: (error as Error).message,
@@ -77,7 +76,11 @@ export const DatasetUpload = ({ types }: DatasetUploadProps) => {
       <Label htmlFor="file_upload">
         Upload a {types === "mapper" ? "txt" : "zip"} file
       </Label>
-      <Input type="file" onChange={handleInputChange} accept={`${types==="mapper" ? ".txt" : ".zip"}`} />
+      <Input
+        type="file"
+        onChange={handleInputChange}
+        accept={`${types === "mapper" ? ".txt" : ".zip"}`}
+      />
       <Button type="submit" disabled={!file || isLoading}>
         Submit
       </Button>

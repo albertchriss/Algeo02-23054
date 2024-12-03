@@ -1,15 +1,13 @@
 from fastapi import FastAPI, Query, Form
 from fastapi import UploadFile, HTTPException
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import zipfile
 import io
 import os
+from tools import *
 
-DATASET_DIR = Path() / "uploads/dataset"
-MAPPER_DIR = Path() / "uploads/mapper"
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 MAPPER_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
@@ -50,8 +48,6 @@ async def create_upload_mapper(file_upload: UploadFile):
         
         is_valid, message = is_valid_mapper(contents_str)
         if (not is_valid):
-        #     # print(contents_str)
-            print(f"Validation failed: {message}")  # Log
             raise HTTPException(status_code=401, detail=message)
         
         file_upload_path = MAPPER_DIR / Path(file_upload.filename)
@@ -69,18 +65,21 @@ async def create_upload_mapper(file_upload: UploadFile):
 @app.post('/uploaddataset/')
 async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(...)):
     is_image = is_image.lower() == "true"
-    delete_dataset()
+    delete_dataset(is_image)
 
     try:
         zip_data = await file_upload.read()
 
+        # extract zip file
         with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_ref:
             for file_name in zip_ref.namelist():
-                # check jika file adalah file gambar
-                if (file_name.lower().endswith((".png", ".jpg", ".jpeg")) and is_image) or (file_name.lower().endswith((".midi")) and not is_image):
+                # check jika file adalah file gambar atau file audio
+                if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
                     extracted_file_path = DATASET_DIR / Path(file_name).name
                     with open(extracted_file_path, "wb") as extracted_file:
                         extracted_file.write(zip_ref.read(file_name))
+                
+                # file bukan file gambar atau file audio
                 else:
                     if (is_image):
                         raise HTTPException(status_code=400, detail="Only image files are allowed")
@@ -100,57 +99,74 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
 @app.get("/dataset/")
 async def read_dataset(is_image: bool = Query(...)):
     if (is_image):
-        image_urls = [
-            f"http://localhost:8000/uploads/dataset/{file_name}"
+        images = [
+            {
+                "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name}", 
+                "title": file_name.split(".")[0]
+            }
             for file_name in os.listdir(DATASET_DIR)
-            if file_name.lower().endswith((".png", ".jpg", ".jpeg"))
+            if is_image_file(file_name)
         ]
-        image_names = [
-            file_name.split(".")[0]
-            for file_name in os.listdir(DATASET_DIR)
-        ]
-        return {"images": image_urls, "image_names": image_names}
+
+        if len(images) == 0:
+            raise HTTPException(status_code=404, detail="No images found")
+
+        return {"images": images}
     else:
-        midi_urls = [
-            f"http://localhost:8000/uploads/dataset/{file_name}"
+        mapper = await read_mapper()
+        mapper = mapper["mappers"]
+
+        midis = [
+            {
+                "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name][0]}" if file_name in mapper else "/cover.jpg", 
+                "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name}",
+                "title": file_name.split(".")[0]
+            }
             for file_name in os.listdir(DATASET_DIR)
-            if file_name.lower().endswith((".midi"))
+            if is_midi_file(file_name)
         ]
-        midi_names = [
-            file_name.split(".")[0]
-            for file_name in os.listdir(DATASET_DIR)
-        ]
-        return {"midis": midi_urls, "midi_names": midi_names}
+
+        if len(midis) == 0:
+            raise HTTPException(status_code=404, detail="No audios found")
+        
+        return {"midis": midis}
 
 
-def delete_dataset():
-    for file in os.listdir(DATASET_DIR):
-        os.remove(DATASET_DIR / file)
-    return {"message": "Dataset deleted"}
+@app.get("/mapper/")
+async def read_mapper():
+    mapper_files = [
+        f"http://localhost:8000/uploads/mapper/{file_name}" 
+        for file_name in os.listdir(MAPPER_DIR)
+    ]
+    if (len(mapper_files) == 0):
+        raise HTTPException(status_code=404, detail="No mapper found")
+    
+    mapper: dict[int, list] = {}
 
-def delete_mapper():
-    for file in os.listdir(MAPPER_DIR):
-        # print(file)
-        os.remove(MAPPER_DIR / file)
-    return {"message": "Mapper deleted"}
+    mapper_file = mapper_files[0]
+    with open(MAPPER_DIR / Path(mapper_file).name, "rb") as file_object:
+        contents = file_object.read()
+        try:
+            contents_str = contents.decode("utf-8")
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid file encoding. Ensure the file is UTF-8 encoded.")
+        
+        content_list = contents_str.split("\n")
+        for content in content_list:
+            content = content.rstrip()
+            files = content.split()
+            if (len(files) == 0):
+                continue
+            image_name = files[0]
+            midi_name = files[1]
+            if (image_name not in mapper):
+                mapper[image_name] = [midi_name]
+            else:
+                mapper[image_name].append(midi_name)
 
-def is_valid_mapper(contents):
-    content_list = contents.split("\n")
-    for content in content_list:
-        content = content.rstrip()
-        files = content.split()
-        if (len(files) == 0):
-            continue
-        if (len(files) > 2 or len(files) == 1):
-            return False, "invalid file format."
-        image_name = files[0]
-        if (not image_name.endswith((".png", ".jpg", ".jpeg"))):
-            return False, f"invalid image file format: {image_name}"
-        midi_name = files[1]
-        if (not midi_name.endswith((".midi"))):
-            return False, f"invalid midi file format: {midi_name}"
-        if not (DATASET_DIR / image_name).exists():
-            return False, f"image file not found: {image_name}"
-        if not (DATASET_DIR / midi_name).exists():
-            return False, f"midi file not found: {midi_name}"
-    return True, ""
+            if (midi_name not in mapper):
+                mapper[midi_name] = [image_name]
+            else:
+                mapper[midi_name].append(image_name)
+
+    return {"mappers": mapper}
