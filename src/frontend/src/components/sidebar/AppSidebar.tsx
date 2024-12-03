@@ -1,8 +1,5 @@
 "use client";
-import {
-  Sidebar,
-  SidebarContent,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import { AppSidebarHeader } from "./AppSidebarHeader";
 import { SidebarMenuGroup } from "./SidebarMenuGroup";
 import { SidebarUploadGroup } from "./SidebarUploadGroup";

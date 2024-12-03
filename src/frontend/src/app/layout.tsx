@@ -4,6 +4,7 @@ import "./globals.css";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
 import { Poppins } from 'next/font/google';
+import { Toaster } from "@/components/ui/toaster"
 
 const poppins = Poppins({
   subsets: ['latin'], // Use subsets appropriate for your language support
@@ -26,6 +27,7 @@ export default function RootLayout({
         <SidebarProvider>
           <AppSidebar />
           <main className="w-full min-h-screen">{children}</main>
+          <Toaster />
         </SidebarProvider>
       </body>
     </html>

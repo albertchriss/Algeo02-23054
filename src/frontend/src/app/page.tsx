@@ -2,28 +2,7 @@ import { NowPlayingCard } from "@/components/home/NowPlayingCard";
 import { PopularAlbum } from "@/components/home/PopularAlbum";
 import { SongList } from "@/components/home/SongList";
 
-const albums = [
-  {
-    imgSrc: "/cover.jpeg",
-    title: "Album 1",
-  },
-  {
-    imgSrc: "/cover.jpeg",
-    title: "Album 2",
-  },
-  {
-    imgSrc: "/cover.jpeg",
-    title: "Album 3",
-  },
-  {
-    imgSrc: "/cover.jpeg",
-    title: "Album 4",
-  },
-  {
-    imgSrc: "/cover.jpeg",
-    title: "Album 5",
-  },
-];
+
 
 const songs = [
   {
@@ -66,7 +45,7 @@ const songs = [
 export default function Home() {
   return (
     <div className="w-full px-10 py-4 flex flex-col gap-10">
-      <PopularAlbum albums={albums} />
+      <PopularAlbum />
       <div className="grid grid-cols-12 gap-8">
         <div className="col-span-7">
           <SongList songs={songs} />
