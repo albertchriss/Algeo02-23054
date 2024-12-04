@@ -3,9 +3,8 @@ import { useEffect, useState } from "react";
 import { AlbumCard } from "../AlbumCard";
 import { useToast } from "@/hooks/use-toast";
 import { AlbumSkeleton } from "./AlbumSkeleton";
-import { Skeleton } from "../ui/skeleton";
 
-type Album = {
+export type Album = {
   imgSrc: string;
   title: string;
 }
@@ -20,7 +19,7 @@ export const PopularAlbum = () => {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
-        const endPoint = "http://localhost:8000/dataset/?is_image=true";
+        const endPoint = "http://localhost:8000/dataset/?is_image=true&limit=5";
         const response = await fetch(endPoint, {
           method: "GET",
         });
@@ -52,7 +51,7 @@ export const PopularAlbum = () => {
   if (isLoading) {
     return (
       <div className="w-full overflow-hidden space-y-4 py-2">
-        <Skeleton className="h-[30px] w-[220px]"/>
+        <h1 className="font-bold text-3xl text-biru-teks">Some Albums</h1>
         <div className="flex gap-10">
           {Array.from({ length: 5 }, (_, index) => index + 1).map((index) => (
             <AlbumSkeleton key={index} />

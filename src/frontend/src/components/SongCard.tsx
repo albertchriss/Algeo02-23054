@@ -1,49 +1,37 @@
-"use client";
+"use client"
+import React, { useState, useRef, useEffect } from "react";
+import ReactHowler from "react-howler";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import { FaPlay } from "react-icons/fa";
-import MIDIPlayer from "midi-player-js";
+import { FaPlay, FaPause } from "react-icons/fa";
+import { useToast } from "@/hooks/use-toast";
 
 interface SongCardProps {
   imgSrc: string;
   title: string;
+  audioSrc: string; // Path to the audio file
   duration: string;
   number: number;
-  songUrl: string;
 }
 
 export const SongCard = ({
   imgSrc,
   title,
+  audioSrc,
   duration,
   number,
-  songUrl,
 }: SongCardProps) => {
-  // const playerRef = useRef<MIDIPlayer.Player | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  // const howlerRef = useRef<ReactHowler | null>(null);
+  // const [mp3Src, setMp3Src] = useState<string>(audioSrc);
+  // const { toast } = useToast();
 
-  // const playSong = () => {
-  //   if (playerRef.current) {
-  //     playerRef.current.play();
-  //   }
-  // };
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
 
-  // // useEffect(() => {
-  //   const player = new MIDIPlayer.Player((event: MIDIPlayer.Event) => {
-  //     console.log(`MIDI event: ${event.name}`);
-  //   });
-  //   player.loadFile(songUrl);
-  //   playerRef.current = player;
 
-  //   return () => {
-  //     // Stop the player and clean up when the component unmounts
-  //     player.stop();
-  //   };
-  // }, [songUrl]);
   return (
-    <div
-      className="w-full grid grid-cols-12 py-3 px-6 text-biru-teks bg-white shadow-xl shadow-gray-200/50"
-      // onClick={playSong}
-    >
+    <div className="w-full grid grid-cols-12 py-3 px-6 text-biru-teks bg-white shadow-xl shadow-gray-200/50">
       <div className="col-span-1 flex items-center">
         <p className="font-extrabold text-xl">{number}</p>
       </div>
@@ -63,7 +51,13 @@ export const SongCard = ({
         <p className="text-center text-gray-500">{duration}</p>
       </div>
       <div className="col-span-1 flex items-center justify-end">
-        <FaPlay className="text-2xl" />
+        <button onClick={handlePlayPause}>
+          {isPlaying ? (
+            <FaPause className="text-2xl" />
+          ) : (
+            <FaPlay className="text-2xl" />
+          )}
+        </button>
       </div>
     </div>
   );

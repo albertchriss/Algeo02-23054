@@ -1,14 +1,35 @@
 import os
 from pathlib import Path
-# from midi2audio import FluidSynth
+import numpy as np
 
 DATASET_DIR = Path() / "uploads/dataset"
 MAPPER_DIR = Path() / "uploads/mapper"
 
-# def convert_midi_to_mp3(midi_file: str, mp3_file: str):
-#     """Convert MIDI to MP3 using FluidSynth."""
-#     fs = FluidSynth()
-#     fs.midi_to_audio(midi_file, mp3_file)
+# def convert_midi_to_wav(midi_file: str, audio_file: str):
+#     print(midi_file)
+#     with open(DATASET_DIR / Path(midi_file).name, 'rb') as f:
+#         midi_file_content = f.read()
+
+#     midi_data = io.BytesIO(midi_file_content)
+
+#     midi = pretty_midi.PrettyMIDI(midi_data)
+
+#     audio_data = midi.synthesize(fs = 44100)
+
+#     audio_data = np.int16(audio_data / np.max(np.abs(audio_data)) * 32767)
+
+#     wav_io = io.BytesIO()
+#     sf.write(wav_io, audio_data, 44100, format='WAV')
+#     wav_io.seek(0)
+
+#     with open(audio_file, "wb") as audio_file:
+#         audio_file.write(wav_io.read())
+
+# def delete_wav():
+#     for file in os.listdir(DATASET_DIR):
+#         if (file.endswith(".wav")):
+#             os.remove(DATASET_DIR / file)
+#     return {"message": "Wav files deleted"}
 
 def delete_dataset(is_image: bool):
     for file in os.listdir(DATASET_DIR):

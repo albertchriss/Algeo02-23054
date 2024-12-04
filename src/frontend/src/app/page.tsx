@@ -1,6 +1,6 @@
 import { NowPlayingCard } from "@/components/home/NowPlayingCard";
 import { PopularAlbum } from "@/components/home/PopularAlbum";
-import { SongList } from "@/components/home/SongList";
+import { PopularSongs } from "@/components/home/PopularSongs";
 
 
 export default function Home() {
@@ -9,7 +9,7 @@ export default function Home() {
       <PopularAlbum />
       <div className="grid grid-cols-12 gap-8">
         <div className="col-span-7">
-          <SongList/>
+          <PopularSongs/>
         </div>
         <div className="col-span-5 space-y-4">
           <h1 className="font-bold text-3xl text-biru-teks">Now Playing</h1>

@@ -7,6 +7,7 @@ import zipfile
 import io
 import os
 from tools import *
+from pydantic import BaseModel
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 MAPPER_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
@@ -30,11 +31,17 @@ app.add_middleware(
 async def read_root():
     return {"message": "Welcome to the backend!"}
 
-@app.post('/uploadfile/')
-async def create_upload_file(file_upload: UploadFile):
-    contents = await file_upload.read()
-    print(contents)
-    return {"content": contents}
+# class AudioPath(BaseModel):
+#     path: str
+# @app.post('/uploadwav/')
+# async def create_wav_file(audio_path: AudioPath):
+#     print(audio_path.path)
+#     delete_wav()
+#     path = audio_path.path
+#     wav_file = path.replace(".midi", ".wav")
+#     print(path)
+#     convert_midi_to_wav(path, wav_file)
+#     return {"wav_file": wav_file}
 
 @app.post('/uploadmapper/')
 async def create_upload_mapper(file_upload: UploadFile):
@@ -50,7 +57,7 @@ async def create_upload_mapper(file_upload: UploadFile):
         if (not is_valid):
             raise HTTPException(status_code=401, detail=message)
         
-        file_upload_path = MAPPER_DIR / Path(file_upload.filename)
+        file_upload_path = MAPPER_DIR / Path("mapper.txt")
         with open(file_upload_path, "wb") as file_object:
             file_object.write(contents)
         return {"content": contents}
@@ -72,19 +79,29 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
 
         # extract zip file
         with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_ref:
-            for file_name in zip_ref.namelist():
+            for file_info in zip_ref.infolist():
+                # Skip directories
+                if file_info.is_dir():
+                    continue
+
+                file_name = file_info.filename
                 # check jika file adalah file gambar atau file audio
                 if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
                     extracted_file_path = DATASET_DIR / Path(file_name).name
-                    with open(extracted_file_path, "wb") as extracted_file:
-                        extracted_file.write(zip_ref.read(file_name))
+                    try:
+                        with open(extracted_file_path, "wb") as extracted_file:
+                            extracted_file.write(zip_ref.read(file_name))
+                    except:
+                        print(f"Failed to write file: {file_name}")
+                        continue
                 
                 # file bukan file gambar atau file audio
                 else:
+                    continue
                     if (is_image):
-                        raise HTTPException(status_code=400, detail="Only image files are allowed")
+                        raise HTTPException(status_code=400, detail=f"Only image files are allowed: {file_name}")
                     else:
-                        raise HTTPException(status_code=400, detail="Only midi files are allowed")
+                        raise HTTPException(status_code=400, detail=f"Only midi files are allowed: {file_name}")
 
         data_urls = [
             f"http://localhost:8000/uploads/data-set/{file_name}"
@@ -97,53 +114,53 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
 
 
 @app.get("/dataset/")
-async def read_dataset(is_image: bool = Query(...)):
+async def read_dataset(is_image: bool = Query(0), page: int = Query(1), limit: int = Query(5)):
+    start_index = (page-1)*limit
+    end_index = page*limit
     if (is_image):
+        image_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_image_file(file_name)]
         images = [
             {
                 "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name}", 
-                "title": file_name.split(".")[0]
+                "title": file_name
             }
-            for file_name in os.listdir(DATASET_DIR)
+            for file_name in image_data[start_index : min(end_index, len(image_data))]
             if is_image_file(file_name)
         ]
 
         if len(images) == 0:
             raise HTTPException(status_code=404, detail="No images found")
 
-        return {"images": images}
+        return {"images": images, "total": len(image_data)}
     else:
         mapper = await read_mapper()
         mapper = mapper["mappers"]
 
+        midi_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_midi_file(file_name)]
         midis = [
             {
-                "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name][0]}" if file_name in mapper else "/cover.jpg", 
-                "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name}",
-                "title": file_name.split(".")[0]
+            "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name][0]}" if file_name in mapper else "/cover.jpg", 
+            "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name}",
+            "title": Path(file_name).stem  
             }
-            for file_name in os.listdir(DATASET_DIR)
+            for file_name in midi_data[start_index : min(end_index, len(midi_data))]
             if is_midi_file(file_name)
         ]
 
         if len(midis) == 0:
             raise HTTPException(status_code=404, detail="No audios found")
         
-        return {"midis": midis}
+        return {"midis": midis, "total": len(midi_data)}
 
 
 @app.get("/mapper/")
 async def read_mapper():
-    mapper_files = [
-        f"http://localhost:8000/uploads/mapper/{file_name}" 
-        for file_name in os.listdir(MAPPER_DIR)
-    ]
-    if (len(mapper_files) == 0):
+    if not (MAPPER_DIR / "mapper.txt").exists():
         raise HTTPException(status_code=404, detail="No mapper found")
     
     mapper: dict[int, list] = {}
 
-    mapper_file = mapper_files[0]
+    mapper_file = "http://localhost:8000/uploads/mapper/mapper.txt"
     with open(MAPPER_DIR / Path(mapper_file).name, "rb") as file_object:
         contents = file_object.read()
         try:
@@ -170,3 +187,44 @@ async def read_mapper():
                 mapper[midi_name].append(image_name)
 
     return {"mappers": mapper}
+
+
+@app.get("/dataset/{file_name}")
+async def read_file(file_name: str, page: int = Query(1), limit: int = Query(10)):
+    start_index = (page-1)*limit
+    end_index = page*limit
+    if (not is_image_file(file_name)):
+        raise HTTPException(status_code=404, detail="Album not found")
+
+    mapper = await read_mapper()
+    mapper = mapper["mappers"]
+
+    if (file_name not in mapper):
+        raise HTTPException(status_code=404, detail="Album not found")
+    
+    midis = [
+        {
+            "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name}", 
+            "audioSrc": f"http://localhost:8000/uploads/dataset/{midi_name}",
+            "title": Path(midi_name).stem
+        }
+        for midi_name in mapper[file_name][start_index : min(end_index, len(mapper[file_name]))]
+    ]
+    
+    return {"midi": midis}
+
+
+@app.post("/mapper/generate/")
+async def generate_mapper():
+    delete_mapper()
+    image_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_image_file(file_name)]
+    midi_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_midi_file(file_name)]
+
+    if (len(image_data) > len(midi_data)):
+        raise HTTPException(status_code=400, detail="Image files cannot be more than midi files")
+
+    # for midi in midi_data:
+    mapper_path = MAPPER_DIR / "mapper.txt"
+    with open(mapper_path, "wb") as mapper_file:
+        for i in range(len(midi_data)):
+            mapper_file.write(f"{image_data[i%len(image_data)]} {midi_data[i]}\n".encode("utf-8"))

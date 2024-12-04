@@ -19,6 +19,40 @@ export const DatasetUpload = ({ types }: DatasetUploadProps) => {
     setFile(e.target.files?.[0] || null);
   };
 
+  const handleOnClick = async () => {
+    try {
+      setIsLoading(true);
+      const endPoint = "http://localhost:8000/mapper/generate/";
+      const response = await fetch(endPoint, {
+        method: "POST",
+      });
+      if (response.ok){
+        toast({
+          title: "Mapper generated successfully",
+          variant: "default",
+        });
+      }
+      else {
+        const errorData = await response.json();
+        toast({
+          title: "Failed to generate mapper.",
+          description: errorData.detail,
+          variant: "destructive",
+        });
+      }
+    }
+    catch (error) {
+      toast({
+        title: "Failed to generate mapper.",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    }
+    finally {
+      setIsLoading(false);
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -84,6 +118,11 @@ export const DatasetUpload = ({ types }: DatasetUploadProps) => {
       <Button type="submit" disabled={!file || isLoading}>
         Submit
       </Button>
+      {
+        types === "mapper" && (
+          <Button className="ml-3" disabled={isLoading} onClick={handleOnClick}>Generate random mapper</Button>
+        )
+      }
     </form>
   );
 };
