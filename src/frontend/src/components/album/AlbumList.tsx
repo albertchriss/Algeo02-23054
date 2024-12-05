@@ -10,29 +10,32 @@ import { PaginationControl } from "../PaginationControl";
 export const AlbumList = () => {
   const searchParams = useSearchParams();
   const page = searchParams.get("page") ?? "1";
+  
+  const q = searchParams.get("q") ?? "";
   const limit = 12;
 
   const router = useRouter();
   const { toast } = useToast();
   const [uploadedImages, setUploadedImages] = useState<Album[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [totalPage, setTotalPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(1);
 
   useEffect(() => {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
-        const endPoint =
-          `http://localhost:8000/dataset/?is_image=true&limit=${limit}&page=${page}`;
+        const endPoint = `http://localhost:8000/dataset/?is_image=true&limit=${limit}&page=${page}&search=${q}`;
         const response = await fetch(endPoint, {
           method: "GET",
         });
         if (response.ok) {
           const data = await response.json();
-          setUploadedImages(data.images || []);
+          setUploadedImages(data.images);
           setTotalPage(Math.ceil(data.total / limit));
         } else {
           const errorData = await response.json();
+          setUploadedImages([]);
+          setTotalPage(1);
           toast({
             title: "Failed to fetch images",
             description: errorData.detail,
@@ -40,6 +43,8 @@ export const AlbumList = () => {
           });
         }
       } catch (error) {
+        setUploadedImages([]);
+        setTotalPage(1);
         toast({
           title: "Failed to fetch images",
           description: (error as Error).message,
@@ -50,7 +55,7 @@ export const AlbumList = () => {
       }
     };
     fetchImages();
-  }, []);
+  }, [page, q]);
 
   if (isLoading) {
     return (
@@ -85,7 +90,7 @@ export const AlbumList = () => {
           ))
         )}
       </div>
-      <PaginationControl totalPage={totalPage} currentUrl={`/album?`}/>
+      <PaginationControl totalPage={totalPage} currentUrl={`/album?`} />
     </>
   );
 };

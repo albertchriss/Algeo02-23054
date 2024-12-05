@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "frontend": "next dev",
-    "backend": "cd ../backend && uvicorn main:app --reload",
+    "backend": "cd ../backend && .\\venv\\Scripts\\Activate && uvicorn main:app --reload",
     "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
     "venv": "..\\backend\\venv\\Scripts\\activate",
     "build": "next build",

@@ -114,18 +114,18 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
 
 
 @app.get("/dataset/")
-async def read_dataset(is_image: bool = Query(0), page: int = Query(1), limit: int = Query(5)):
+async def read_dataset(is_image: bool = Query(0), page: int = Query(1), limit: int = Query(5), search: str = Query("")):
+    page = max(1, page)
     start_index = (page-1)*limit
     end_index = page*limit
     if (is_image):
-        image_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_image_file(file_name)]
+        image_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_image_file(file_name) and search.lower() in file_name.lower().replace(".jpg", "").replace(".jpeg", "").replace(".png", "")]
         images = [
             {
                 "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name}", 
                 "title": file_name
             }
             for file_name in image_data[start_index : min(end_index, len(image_data))]
-            if is_image_file(file_name)
         ]
 
         if len(images) == 0:
@@ -136,7 +136,7 @@ async def read_dataset(is_image: bool = Query(0), page: int = Query(1), limit: i
         mapper = await read_mapper()
         mapper = mapper["mappers"]
 
-        midi_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_midi_file(file_name)]
+        midi_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_midi_file(file_name) and search.lower() in file_name.lower().replace(".mid", "")]
         midis = [
             {
             "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name][0]}" if file_name in mapper else "/cover.jpg", 
@@ -144,7 +144,6 @@ async def read_dataset(is_image: bool = Query(0), page: int = Query(1), limit: i
             "title": Path(file_name).stem  
             }
             for file_name in midi_data[start_index : min(end_index, len(midi_data))]
-            if is_midi_file(file_name)
         ]
 
         if len(midis) == 0:

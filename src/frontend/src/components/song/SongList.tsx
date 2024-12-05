@@ -3,6 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 import { SongCard } from "../SongCard";
 import { useEffect, useState } from "react";
 import { SongSkeleton } from "@/components/home/SongSkeleton";
+import { PaginationControl } from "../PaginationControl";
+import { useSearchParams } from "next/navigation";
 
 export type Song = {
   imgSrc: string;
@@ -14,20 +16,29 @@ export const SongList = () => {
   const { toast } = useToast();
   const [uploadedAudios, setUploadedAudios] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalPage, setTotalPage] = useState(1);
+  const limit = 10;
+
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") ?? "";
+  const page = searchParams.get("page") ?? "1";
 
   useEffect(() => {
     const fetchAudios = async () => {
       try {
         setIsLoading(true);
-        const endPoint = "http://localhost:8000/dataset/?is_image=false&page=1&limit=10";
+        const endPoint = `http://localhost:8000/dataset/?is_image=false&page=${page}&limit=${limit}&search=${q}`;
         const response = await fetch(endPoint, {
           method: "GET",
         });
         if (response.ok) {
           const data = await response.json();
           setUploadedAudios(data.midis || []);
+          setTotalPage(Math.ceil(data.total / limit));
         } else {
           const errorData = await response.json();
+          setUploadedAudios([]);
+          setTotalPage(1);
           toast({
             title: "Failed to fetch images",
             description: errorData.detail,
@@ -45,7 +56,7 @@ export const SongList = () => {
       }
     };
     fetchAudios();
-  }, []);
+  }, [page, q]);
 
   if (isLoading){
     return (
@@ -74,11 +85,12 @@ export const SongList = () => {
               imgSrc={song.imgSrc}
               title={song.title}
               duration={"3:00"}
-              number={index + 1}
+              number={(Number(page)-1)*limit+index+1}
               audioSrc={song.audioSrc}
             />
           ))
         }
+        <PaginationControl currentUrl="/song?" totalPage={totalPage}/>
       </div>
     </div>
   );
