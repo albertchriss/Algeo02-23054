@@ -68,7 +68,7 @@ def cosine_similarity(hist_a, hist_b):
     return similarity
 
 def calculate_similarity_score(all_hist, query_hist):
-    return 0.4 * cosine_similarity(all_hist["hist_ATB"], query_hist["hist_ATB"]) + 0.4 * cosine_similarity(all_hist["hist_RTB"], query_hist["hist_RTB"]) + 0.2 * cosine_similarity(all_hist["hist_FTB"], query_hist["hist_FTB"])
+    return 0.2 * cosine_similarity(all_hist["hist_ATB"], query_hist["hist_ATB"]) + 0.6 * cosine_similarity(all_hist["hist_RTB"], query_hist["hist_RTB"]) + 0.2 * cosine_similarity(all_hist["hist_FTB"], query_hist["hist_FTB"])
 # # Example usage
 # beat_list = midi_to_beats("MIDI_sample.mid") # list of beats
 # window_list = beats_to_windows(beat_list, 20) # list of windows dengan ukuran 20 beats

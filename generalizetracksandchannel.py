@@ -90,9 +90,7 @@ for midi_file in midi_files:
     midi_window = beats_to_windows(midi_beat, 20)
     print("banyak window:", len(midi_window))
     # midi_note = midi_to_note(midi_path)
-    count = 0
     for window in midi_window:
-        count = count + 1
         flattened_window = [note for beat in window for note in beat]
         if(len(flattened_window)!=0):
             hist_atb = calculate_atb(flattened_window)
@@ -107,7 +105,7 @@ for midi_file in midi_files:
 
 
 # Load MIDI file and identify the melody track
-query_path = "midi_dataset2/Backstreet_Boys/I_Want_It_That_Way.mid"
+query_path = "midi_dataset2/Backstreet_Boys/bboys2.mid"
 query_midi = MidiFile(query_path)
 # print(query_midi)
 melody_track = identify_melody_track(query_midi)
@@ -115,11 +113,11 @@ main_channel = identify_main_channel(melody_track)
 
 query_beats = midi_to_beats(query_path, melody_track, main_channel)
 query_windows = beats_to_windows(query_beats, 20)
-similarity_result = [0 for i in range(len(midi_files)+1)]
+temp_result = [0 for i in range(len(midi_files)+1)]
 temp_song = all_vect_hist[0]["filename"]
-
-count = 0
+similarity_result = [0 for i in range(len(midi_files)+1)]
 for window in query_windows:
+    temp_song = all_vect_hist[0]["filename"]
     flattened_window = [note for beat in window for note in beat]
     if(len(flattened_window)!=0):
         hist_atb = calculate_atb(flattened_window)
@@ -128,33 +126,33 @@ for window in query_windows:
         all_hist = {"hist_ATB": hist_atb,
                 "hist_RTB": hist_rtb,
                 "hist_FTB": hist_ftb}
-        i = 0
-        count2 = 0
+        ii = 0
         for database_window in all_vect_hist:
             if database_window["filename"] != temp_song:
                 temp_song = database_window["filename"]
-                i += 1
-                count2 += 1
-            count2 += 1
-            # print("simres:" , similarity_result[i])
-            similarity_result[i] = max(similarity_result[i], calculate_similarity_score(database_window, all_hist))
+                ii += 1
+            # print("simres:" , temp_result[i])
+            temp_result[ii] = max(temp_result[ii], calculate_similarity_score(database_window, all_hist))
+            # print(temp_result)
             # similarity_result.append({
             #     "score": calculate_similarity_score(database_window, all_hist),
             #     "filename": database_window["filename"]
-            # })
-    else:
-        count += 1
+            # }
+        for idx in range(len(temp_result)):
+            similarity_result[idx] += temp_result[idx]
+    
+
 concat_sim_result = []
 for i in range(len(midi_files)):
     concat_sim_result.append({
         "filename": midi_files[i],
-        "score": similarity_result[i]
+        "score": similarity_result[i]/len(query_windows)
     })
 concat_sim_result.sort(key=lambda x: x["score"], reverse=True)
-for i in range(5):
+for i in range(len(concat_sim_result)):
     print(concat_sim_result[i]["filename"], concat_sim_result[i]["score"])
 print(len(concat_sim_result))
-print(concat_sim_result)
+# print(concat_sim_result)
 end = time.time()
 
 print("Time run: ", end - start)    
