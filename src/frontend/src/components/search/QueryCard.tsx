@@ -5,6 +5,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 type QueryType = "image" | "audio";
 
@@ -17,7 +18,7 @@ interface QueryCardProps {
 export const QueryCard = ({ types, children, className }: QueryCardProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null); 
-  const [query, setQuery] = useState<string | null>(null); 
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,8 +66,8 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
 
       if (response.ok) {
         console.log("File uploaded successfully");
-        const responseData = await response.json();
-        setQuery(responseData.file_name);
+        // const responseData = await response.json();
+        router.push(`/search/result`);
         toast({
           title: "File uploaded successfully",
           variant: "default",

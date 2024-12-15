@@ -79,7 +79,7 @@ export const AlbumView = ({ name }: AlbumViewProps) => {
   }
 
   return (
-    <div className="flex flex-col w-full gap-3x">
+    <div className="flex flex-col w-full gap-3">
       {songs.map((song, index) => (
         <SongCard
           key={index}

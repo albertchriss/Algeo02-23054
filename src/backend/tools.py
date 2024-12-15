@@ -5,6 +5,7 @@ import numpy as np
 DATASET_DIR = Path() / "uploads/dataset"
 MAPPER_DIR = Path() / "uploads/mapper"
 QUERY_DIR = Path() / "uploads/query"
+QUERY_RESULT_DIR = Path() / "uploads/query_result"
 
 def delete_dataset(is_image: bool):
     for file in os.listdir(DATASET_DIR):
@@ -23,6 +24,11 @@ def delete_query():
     for file in os.listdir(QUERY_DIR):
         os.remove(QUERY_DIR / file)
     return {"message": "Query deleted"}
+
+def delete_query_result():
+    for file in os.listdir(QUERY_RESULT_DIR):
+        os.remove(QUERY_RESULT_DIR / file)
+    return {"message": "Query result deleted"}
 
 def is_valid_mapper_format(files: list):
     # cek validitas format, yaitu "image.png/jpg/jpeg<spasi>midi.midi"

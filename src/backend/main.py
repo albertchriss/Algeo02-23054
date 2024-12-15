@@ -8,19 +8,23 @@ import io
 import os
 from tools import *
 from pydantic import BaseModel
+from image.image_processing import imageProcessing
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 MAPPER_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 QUERY_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+QUERY_RESULT_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI()
 
 data_set_directory = Path(__file__).parent / "uploads/dataset"
 mapper_directory = Path(__file__).parent / "uploads/mapper"
 query_directory = Path(__file__).parent / "uploads/query"
+query_result_directory = Path(__file__).parent / "uploads/query_result"
 app.mount("/uploads/dataset", StaticFiles(directory=data_set_directory), name="dataset")
 app.mount("/uploads/mapper", StaticFiles(directory=mapper_directory), name="mapper")
 app.mount("/uploads/query", StaticFiles(directory=query_directory), name="query")
+app.mount("/uploads/query_result", StaticFiles(directory=query_result_directory), name="query_result")
 
 # CORS setup for communication with frontend
 app.add_middleware(
@@ -38,6 +42,7 @@ async def read_root():
 async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)):
     try:
         delete_query()
+        delete_query_result()
         file_name = file_upload.filename
         if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
             extracted_file_path = QUERY_DIR / Path(file_name).name
@@ -45,16 +50,35 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 contents = await file_upload.read()
                 with open(extracted_file_path, "wb") as extracted_file:
                     extracted_file.write(contents)
-                
-                return {"file_name": f"http://localhost:8000/uploads/query/{file_name}"}
             except:
                 print(f"Failed to write file: {file_name}")
+
+            result = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
+            for idx, res in enumerate(result[:12]):
+                contents = open(res, "rb").read()
+                query_file_path = QUERY_RESULT_DIR / f"{idx:02d}_{Path(res).name}"
+                with open(query_file_path, "wb") as query_file:
+                    query_file.write(contents)
+
     except HTTPException as http_exc:
         # Re-raise the HTTP exceptions that are meant to provide specific feedback
         raise http_exc
     except Exception as exc:
         # Catch any other exceptions and raise a generic HTTP exception
         raise HTTPException(status_code=400, detail="Invalid file")
+
+@app.get('/query/')
+async def get_query_result(is_image: bool = Query(0)):
+    if (not os.listdir(QUERY_RESULT_DIR)):
+        raise HTTPException(status_code=404, detail="No query found")
+
+    query_files = os.listdir(QUERY_RESULT_DIR)
+    result = [ {
+                "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name[3:]}", 
+                "title": file_name[3:]
+            } for file_name in query_files]
+
+    return {"result": result}
 
 @app.post('/uploadmapper/')
 async def create_upload_mapper(file_upload: UploadFile):
@@ -117,7 +141,7 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
                         raise HTTPException(status_code=400, detail=f"Only midi files are allowed: {file_name}")
 
         data_urls = [
-            f"http://localhost:8000/uploads/data-set/{file_name}"
+            f"http://localhost:8000/uploads/dataset/{file_name}"
             for file_name in os.listdir(DATASET_DIR)
         ]
         return {"uploaded_images": data_urls}
@@ -238,8 +262,8 @@ async def generate_mapper():
     if (len(midi_data) == 0):
         raise HTTPException(status_code=400, detail="No midi files found")
 
-    if (len(image_data) > len(midi_data)):
-        raise HTTPException(status_code=400, detail="Image files cannot be more than midi files")
+    # if (len(image_data) > len(midi_data)):
+    #     raise HTTPException(status_code=400, detail="Image files cannot be more than midi files")
 
     # for midi in midi_data:
     mapper_path = MAPPER_DIR / "mapper.txt"
