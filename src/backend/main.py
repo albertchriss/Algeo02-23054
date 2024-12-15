@@ -223,7 +223,7 @@ async def read_file(file_name: str, page: int = Query(1), limit: int = Query(10)
         for midi_name in mapper[file_name][start_index : min(end_index, len(mapper[file_name]))]
     ]
     
-    return {"midi": midis}
+    return {"midi": midis, "total": len(mapper[file_name])}
 
 
 @app.post("/mapper/generate/")

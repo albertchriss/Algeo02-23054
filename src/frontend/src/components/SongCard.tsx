@@ -21,17 +21,13 @@ export const SongCard = ({
   number,
 }: SongCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  // const howlerRef = useRef<ReactHowler | null>(null);
-  // const [mp3Src, setMp3Src] = useState<string>(audioSrc);
-  // const { toast } = useToast();
-
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
   };
 
 
   return (
-    <div className="w-full grid grid-cols-12 py-3 px-6 text-biru-teks bg-white shadow-xl shadow-gray-200/50">
+    <div className="w-full grid grid-cols-12 py-3 px-6 text-biru-teks bg-white shadow-xl shadow-gray-200/50 hover:scale-105 hover:bg-cyan-tua/10 transition-all duration-300">
       <div className="col-span-1 flex items-center">
         <p className="font-extrabold text-xl">{number}</p>
       </div>

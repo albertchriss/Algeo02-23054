@@ -21,7 +21,10 @@ export const SongList = () => {
 
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
-  const page = searchParams.get("page") ?? "1";
+  let page = searchParams.get("page") ?? "1";
+  if (Number(page) < 1) {
+    page = "1";
+  }
 
   useEffect(() => {
     const fetchAudios = async () => {
@@ -46,6 +49,8 @@ export const SongList = () => {
           });
         }
       } catch (error) {
+        setUploadedAudios([]);
+        setTotalPage(1);
         toast({
           title: "Failed to fetch images",
           description: (error as Error).message,
