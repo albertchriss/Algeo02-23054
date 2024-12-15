@@ -11,13 +11,16 @@ from pydantic import BaseModel
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 MAPPER_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+QUERY_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
 app = FastAPI()
 
 data_set_directory = Path(__file__).parent / "uploads/dataset"
 mapper_directory = Path(__file__).parent / "uploads/mapper"
+query_directory = Path(__file__).parent / "uploads/query"
 app.mount("/uploads/dataset", StaticFiles(directory=data_set_directory), name="dataset")
 app.mount("/uploads/mapper", StaticFiles(directory=mapper_directory), name="mapper")
+app.mount("/uploads/query", StaticFiles(directory=query_directory), name="query")
 
 # CORS setup for communication with frontend
 app.add_middleware(
@@ -31,17 +34,27 @@ app.add_middleware(
 async def read_root():
     return {"message": "Welcome to the backend!"}
 
-# class AudioPath(BaseModel):
-#     path: str
-# @app.post('/uploadwav/')
-# async def create_wav_file(audio_path: AudioPath):
-#     print(audio_path.path)
-#     delete_wav()
-#     path = audio_path.path
-#     wav_file = path.replace(".midi", ".wav")
-#     print(path)
-#     convert_midi_to_wav(path, wav_file)
-#     return {"wav_file": wav_file}
+@app.post('/uploadquery/')
+async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)):
+    try:
+        delete_query()
+        file_name = file_upload.filename
+        if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
+            extracted_file_path = QUERY_DIR / Path(file_name).name
+            try:
+                contents = await file_upload.read()
+                with open(extracted_file_path, "wb") as extracted_file:
+                    extracted_file.write(contents)
+                
+                return {"file_name": f"http://localhost:8000/uploads/query/{file_name}"}
+            except:
+                print(f"Failed to write file: {file_name}")
+    except HTTPException as http_exc:
+        # Re-raise the HTTP exceptions that are meant to provide specific feedback
+        raise http_exc
+    except Exception as exc:
+        # Catch any other exceptions and raise a generic HTTP exception
+        raise HTTPException(status_code=400, detail="Invalid file")
 
 @app.post('/uploadmapper/')
 async def create_upload_mapper(file_upload: UploadFile):
@@ -210,7 +223,7 @@ async def read_file(file_name: str, page: int = Query(1), limit: int = Query(10)
         for midi_name in mapper[file_name][start_index : min(end_index, len(mapper[file_name]))]
     ]
     
-    return {"midi": midis}
+    return {"midi": midis, "total": len(mapper[file_name])}
 
 
 @app.post("/mapper/generate/")
@@ -218,6 +231,12 @@ async def generate_mapper():
     delete_mapper()
     image_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_image_file(file_name)]
     midi_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_midi_file(file_name)]
+
+    if (len(image_data) == 0):
+        raise HTTPException(status_code=400, detail="No image files found")
+
+    if (len(midi_data) == 0):
+        raise HTTPException(status_code=400, detail="No midi files found")
 
     if (len(image_data) > len(midi_data)):
         raise HTTPException(status_code=400, detail="Image files cannot be more than midi files")
