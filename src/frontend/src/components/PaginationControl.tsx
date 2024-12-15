@@ -34,7 +34,7 @@ export const PaginationControl = ({
   const q = search.length > 0 ? `&q=${search}` : "";
 
   return (
-    <Pagination>
+    <Pagination className="mt-3">
       <PaginationContent>
         {Number(page) > 1 && (
           <PaginationItem>

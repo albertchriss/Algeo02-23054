@@ -4,32 +4,7 @@ import numpy as np
 
 DATASET_DIR = Path() / "uploads/dataset"
 MAPPER_DIR = Path() / "uploads/mapper"
-
-# def convert_midi_to_wav(midi_file: str, audio_file: str):
-#     print(midi_file)
-#     with open(DATASET_DIR / Path(midi_file).name, 'rb') as f:
-#         midi_file_content = f.read()
-
-#     midi_data = io.BytesIO(midi_file_content)
-
-#     midi = pretty_midi.PrettyMIDI(midi_data)
-
-#     audio_data = midi.synthesize(fs = 44100)
-
-#     audio_data = np.int16(audio_data / np.max(np.abs(audio_data)) * 32767)
-
-#     wav_io = io.BytesIO()
-#     sf.write(wav_io, audio_data, 44100, format='WAV')
-#     wav_io.seek(0)
-
-#     with open(audio_file, "wb") as audio_file:
-#         audio_file.write(wav_io.read())
-
-# def delete_wav():
-#     for file in os.listdir(DATASET_DIR):
-#         if (file.endswith(".wav")):
-#             os.remove(DATASET_DIR / file)
-#     return {"message": "Wav files deleted"}
+QUERY_DIR = Path() / "uploads/query"
 
 def delete_dataset(is_image: bool):
     for file in os.listdir(DATASET_DIR):
@@ -43,6 +18,11 @@ def delete_mapper():
     for file in os.listdir(MAPPER_DIR):
         os.remove(MAPPER_DIR / file)
     return {"message": "Mapper deleted"}
+
+def delete_query():
+    for file in os.listdir(QUERY_DIR):
+        os.remove(QUERY_DIR / file)
+    return {"message": "Query deleted"}
 
 def is_valid_mapper_format(files: list):
     # cek validitas format, yaitu "image.png/jpg/jpeg<spasi>midi.midi"
