@@ -194,7 +194,7 @@ def queryImage(query_paths: list, image_paths: list , projected_data, eigenvecto
     for similarity, img_path in sorted_similarities[:12]:
         print(f"Image: {img_path}, Similarity: {similarity:.2f}%")
         if similarity > 75:
-            sorted_by_percentage_images.append({img_path: similarity})
+            sorted_by_percentage_images.append({"filepath": img_path, "score": similarity})
     return sorted_by_percentage_images
 
 
@@ -244,7 +244,7 @@ def imageProcessing(data_image_dir: str, query_paths: list, target_size=100, num
     for similarity, img_path in sorted_similarities[:12]:
         print(f"Image: {img_path}, Similarity: {similarity:.2f}%")
         if similarity > 75:
-            sorted_by_percentage_images[img_path] = similarity
+            sorted_by_percentage_images.append({"filepath": img_path, "score": similarity})
     t7 = time.time()
     print(f"compute similarity: {t7-t6}")
     return sorted_by_percentage_images
@@ -258,10 +258,11 @@ def imageProcessing(data_image_dir: str, query_paths: list, target_size=100, num
 #                                                                                                USAGE EXAMPLE
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # if __name__ == '__main__':
-    # print("start")
-    # imgPath, projData, eigen, datMean = preProcessingDataSet(r"D:\album_covers_512")
-    # res = queryImage([r"D:\album_covers_512\22.jpg"], imgPath, projData, eigen, datMean)
-    # print("end")
+#     print("start")
+#     imgPath, projData, eigen, datMean = preProcessingDataSet(r"D:\album_covers_512")
+#     res = queryImage([r"D:\album_covers_512\22.jpg"], imgPath, projData, eigen, datMean)
+#     print(res[0]["score"])
+#     print("end")
     # print("start2")
     # res = imageProcessing(r"D:\album_covers_512", [r"D:\album_covers_512\22.jpg"])
     # print("end2")
