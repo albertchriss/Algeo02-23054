@@ -5,9 +5,13 @@ import { Song } from "../home/PopularSongs";
 import { SongSkeleton } from "../home/SongSkeleton";
 import { SongCard } from "../SongCard";
 
+type extendedSong = Song & {
+  score: string;
+}
+
 export const AudioResult = () => {
   const { toast } = useToast();
-  const [resultAudios, setResultAudios] = useState<Song[]>([]);
+  const [resultAudios, setResultAudios] = useState<extendedSong[]>([]);
   const [timeTaken, setTimeTaken] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -74,7 +78,7 @@ export const AudioResult = () => {
               key={index}
               imgSrc={song.imgSrc}
               title={song.title}
-              duration={"3:00"}
+              score={Number(song.score)}
               number={index + 1}
             />
           ))

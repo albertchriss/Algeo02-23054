@@ -121,7 +121,7 @@ def preprocess_database(dataset_path):
                 # Use os.path.join(root, file) directly
                 midi_files.append(os.path.join(root, file))
 
-    midi_files = midi_files[:100]
+    midi_files = midi_files
     all_vect_hist = {}
     # Loop melalui semua file MIDI
     for midi_file in midi_files:
@@ -145,6 +145,8 @@ def preprocess_database(dataset_path):
 def process_query(query_path, database):
     try:
         query_data = PrettyMIDI(query_path)
+        progress = 10
+        yield progress
         # Process MIDI data
         query_windows = group_beat_by_window(query_data)
 
@@ -157,19 +159,21 @@ def process_query(query_path, database):
                 hist_rtb = calculate_rtb(window)
                 hist_ftb = calculate_ftb(window)
                 database[query_path].append([hist_atb,hist_rtb,hist_ftb])
+            progress += 20/len(query_windows)
+            yield progress
 
         # compare query to database
-        print(len(database.keys()))
         for midi_file in database.keys():
             if(midi_file == query_path):
                 continue
             similarity_result = sliding_similarity(database[midi_file], database[query_path])
             if(similarity_result >= 0.7000000):
                 final_res.append({
-                    # "score": similarity_result,
                     "score": similarity_result,
                     "filename": midi_file
                 })
+            progress += 70/len(database.keys())
+            yield progress
         final_res.sort(key=lambda x: x["score"], reverse=True)
         return final_res
     
