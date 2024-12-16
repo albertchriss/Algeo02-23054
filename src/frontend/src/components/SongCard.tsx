@@ -1,14 +1,12 @@
 "use client"
-import React, { useState, useRef, useEffect } from "react";
-import ReactHowler from "react-howler";
+import React, { useState } from "react";
 import Image from "next/image";
 import { FaPlay, FaPause } from "react-icons/fa";
-import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface SongCardProps {
   imgSrc: string;
   title: string;
-  audioSrc: string; // Path to the audio file
   duration: string;
   number: number;
 }
@@ -16,7 +14,6 @@ interface SongCardProps {
 export const SongCard = ({
   imgSrc,
   title,
-  audioSrc,
   duration,
   number,
 }: SongCardProps) => {
@@ -24,10 +21,12 @@ export const SongCard = ({
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
   };
+  const router = useRouter();
 
 
   return (
-    <div className="w-full grid grid-cols-12 py-3 px-6 text-biru-teks bg-white shadow-xl shadow-gray-200/50 hover:scale-105 hover:bg-cyan-tua/10 transition-all duration-300">
+    <div className="w-full grid grid-cols-12 py-3 px-6 text-biru-teks bg-white shadow-xl shadow-gray-200/50 hover:scale-105 hover:bg-cyan-tua/10 transition-all duration-300 hover:cursor-pointer"
+    onClick={() => router.push(`/song/${title}.mid`)}>
       <div className="col-span-1 flex items-center">
         <p className="font-extrabold text-xl">{number}</p>
       </div>
