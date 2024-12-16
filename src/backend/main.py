@@ -10,7 +10,7 @@ import os
 from tools import *
 from pydantic import BaseModel
 from image.image_processing import imageProcessing
-from image.image_processing import progress
+from audio.audioprocessing import process_query, preprocess_database
 import time
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
@@ -68,17 +68,23 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 yield "data: 10\n\n"
 
                 now = time.time()
+                result = None
+                
+                if is_image:
                 # Start image processing and stream progress
-                generator = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
-                result = []
-                while True:
-                    try:
-                        progress = next(generator)  # Get the next progress value
-                        yield f"data: {progress}\n\n"
-                    except StopIteration as stop_result:
-                        # Capture the final result from the generator
-                        result = stop_result.value
-                        break
+                    generator = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
+                    while True:
+                        try:
+                            progress = next(generator)  # Get the next progress value
+                            yield f"data: {progress}\n\n"
+                        except StopIteration as stop_result:
+                            # Capture the final result from the generator
+                            result = stop_result.value
+                            break
+
+                else:
+                    database = preprocess_database(DATASET_DIR)
+                    result = process_query(extracted_file_path, database)
                     # print(result)
 
                 time_taken = time.time() - now
