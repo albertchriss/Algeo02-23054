@@ -8,10 +8,10 @@ import zipfile
 import io
 import os
 from tools import *
-from pydantic import BaseModel
-from image.image_processing import imageProcessing
+from image.image_processing import preProcessingDataSet, queryImage
 from audio.audioprocessing import process_query, preprocess_database
 import time
+import joblib
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 MAPPER_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
@@ -73,22 +73,26 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 
                 if is_image:
                 # Start image processing and stream progress
-                    generator = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
-                    while True:
-                        try:
-                            progress = next(generator)  # Get the next progress value
-                            yield f"data: {progress}\n\n"
-                        except StopIteration as stop_result:
-                            # Capture the final result from the generator
-                            result = stop_result.value
-                            break
+                    result = queryImage([str(extracted_file_path)], DATASET_DIR)
+                    # generator = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
+                    # while True:
+                    #     try:
+                    #         progress = next(generator)  # Get the next progress value
+                    #         yield f"data: {progress}\n\n"
+                    #     except StopIteration as stop_result:
+                    #         # Capture the final result from the generator
+                    #         result = stop_result.value
+                    #         break
 
                 else:
-                    database = preprocess_database(DATASET_DIR)
+                    # Load the preprocessed database if it exists, otherwise preprocess and save it
+                    database_path = DATASET_DIR / "preprocessed_database.pkl"
+                    if database_path.exists():
+                        database = joblib.load(database_path)
+
                     print(len(database))
                     result = process_query(str(extracted_file_path), database)
                     print(result[:limit])
-                    result = [res["filename"] for res in result]
                     # print(result)
 
                 time_taken = time.time() - now
@@ -96,7 +100,7 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 
                 with open(query_file_path, "w", encoding="utf-8") as query_file:
                     for res in result[:limit]:
-                        query_file.write(res + "\n")
+                        query_file.write(f"{res["filename"]} {res["score"]}\n")
                     query_file.write(str(time_taken) + "\n")
                 
                 yield "data: 100\n\n"
@@ -139,16 +143,18 @@ async def get_query_result(is_image: bool = Query(0)):
 
     if (is_image):
         result = [ {
-                    "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name[file_name.rfind('\\')+1:].strip()}", 
-                    "title": file_name[file_name.rfind('\\')+1:].strip()
+                    "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name[file_name.rfind('\\')+1:].strip().split()[0]}", 
+                    "title": file_name[file_name.rfind('\\')+1:].strip().split()[0],
+                    "score": file_name[file_name.rfind('\\')+1:].strip().split()[1]
                 } for file_name in query_files[:-1]]
     else:
         mapper = await read_mapper()
         mapper = mapper["mappers"]
         result = [ {
-                    "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name[file_name.rfind('\\')+1:].strip()][0]}", 
-                    "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name[file_name.rfind('\\')+1:].strip()}",
-                    "title": Path(file_name.strip()).stem
+                    "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name[file_name.rfind('\\')+1:].strip().split()[0]][0]}", 
+                    "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name[file_name.rfind('\\')+1:].strip().split()[0]}",
+                    "title": Path(file_name.strip().split()[0]).stem,
+                    "score": file_name.strip().split()[1]
                 } for file_name in query_files[:-1]]
         
     if len(result) == 0:
@@ -213,11 +219,17 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
                 # file bukan file gambar atau file audio
                 else:
                     continue
-                    if (is_image):
-                        raise HTTPException(status_code=400, detail=f"Only image files are allowed: {file_name}")
-                    else:
-                        raise HTTPException(status_code=400, detail=f"Only midi files are allowed: {file_name}")
-
+        
+        if (is_image):
+            image_paths, projected_data, eigenvectors, dataMean = preProcessingDataSet(DATASET_DIR)
+            # Save the processed data using joblib
+            path = DATASET_DIR / "processed_data.pkl"
+            joblib.dump((image_paths, projected_data, eigenvectors, dataMean), path)
+        else:
+            database = preprocess_database(DATASET_DIR)
+            path = DATASET_DIR / "preprocessed_database.pkl"
+            joblib.dump(database, path)
+                        
         data_urls = [
             f"http://localhost:8000/uploads/dataset/{file_name}"
             for file_name in os.listdir(DATASET_DIR)
@@ -348,3 +360,17 @@ async def generate_mapper():
     with open(mapper_path, "wb") as mapper_file:
         for i in range(len(midi_data)):
             mapper_file.write(f"{image_data[i%len(image_data)]} {midi_data[i]}\n".encode("utf-8"))
+
+
+@app.get("/song/")
+async def get_song(name: str = Query("")):
+    mapper = await read_mapper()
+    mapper = mapper["mappers"]
+    if (name not in mapper):
+        raise HTTPException(status_code=404, detail="Song not found")
+    song = {
+        "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[name][0]}", 
+        "audioSrc": f"http://localhost:8000/uploads/dataset/{name}",
+        "title": Path(name).stem
+    }
+    return {"song": song}

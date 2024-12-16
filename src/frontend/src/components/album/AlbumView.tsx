@@ -84,7 +84,6 @@ export const AlbumView = ({ name }: AlbumViewProps) => {
         <SongCard
           key={index}
           number={(Number(page)-1)*limit+index+1}
-          audioSrc={song.audioSrc}
           imgSrc={song.imgSrc}
           title={song.title}
           duration={"3:00"}

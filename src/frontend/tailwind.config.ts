@@ -15,9 +15,6 @@ export default {
         "cyan-tua": "#12B0B0",
         "cyan-muda": "#13E8E8",
         "abu-abu": "#F9FAFE",
-        
-        // "abu-abu": "#EFEFEF",
-        // "abu-abu": "#E0E0E0",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

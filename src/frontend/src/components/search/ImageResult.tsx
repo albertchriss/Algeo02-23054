@@ -6,12 +6,16 @@ import { AlbumSkeleton } from "../home/AlbumSkeleton";
 import { AlbumWrapper } from "@/components/album/AlbumWrapper";
 import { useRouter } from "next/navigation";
 
+type extendedAlbum = Album & {
+  score: string;
+}
+
 export const ImageResult = () => {
   // const limit = 12;
 
   const router = useRouter();
   const { toast } = useToast();
-  const [resultImages, setresultImages] = useState<Album[]>([]);
+  const [resultImages, setresultImages] = useState<extendedAlbum[]>([]);
   const [timeTaken, setTimeTaken] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -81,7 +85,7 @@ export const ImageResult = () => {
               key={index}
               onClick={() => router.push(`/album/${album.title}`)}
             >
-              <AlbumWrapper imgSrc={album.imgSrc} title={album.title} />
+              <AlbumWrapper imgSrc={album.imgSrc} title={album.title} score={Number(album.score)} />
             </div>
           ))
         )}

@@ -89,3 +89,52 @@
     @apply bg-background text-foreground;
   }
 }
+
+.midi-player-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.midi-player-wrapper span > div {
+  background: none !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: end !important;
+  gap: 2rem !important;
+  position: relative;
+}
+
+.midi-player-wrapper div[title="midi"] {
+  display: none !important;
+}
+
+.midi-player-wrapper div[title="Web Audio"] {
+  display: none !important;
+}
+
+.midi-player-wrapper div[title="play"] {
+  background: #25b1b1 !important;
+  border-radius: 100% !important;
+  left: 36px !important;
+}
+
+.midi-player-wrapper div[title="pause"] {
+  background: #25b1b1 !important;
+  border-radius: 100% !important;
+  left:64px !important;
+}
+
+.midi-player-wrapper div[title="stop"] {
+  background: #25b1b1 !important;
+  border-radius: 100% !important;
+  left: 92px !important;
+}
+
+.midi-player-wrapper div[title="loop"] {
+  display: none !important;
+}
+
+.midi-player-wrapper div[title="loop: ∞"] {
+  display: none !important;
+}

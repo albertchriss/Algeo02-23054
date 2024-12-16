@@ -1,6 +1,6 @@
-import { NowPlayingCard } from "@/components/home/NowPlayingCard";
 import { PopularAlbum } from "@/components/home/PopularAlbum";
 import { PopularSongs } from "@/components/home/PopularSongs";
+import { QueryPageCard } from "@/components/home/QueryPageCard";
 
 
 export default function Home() {
@@ -12,8 +12,8 @@ export default function Home() {
           <PopularSongs/>
         </div>
         <div className="col-span-5 space-y-4">
-          <h1 className="font-bold text-3xl text-biru-teks">Now Playing</h1>
-          <NowPlayingCard imgSrc="/cover.jpeg" title="Ian ngerap" duration="10:00"/>
+          <h1 className="font-bold text-3xl text-biru-teks">Search</h1>
+          <QueryPageCard />
         </div>
       </div>
     </div>

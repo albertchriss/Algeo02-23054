@@ -152,11 +152,11 @@ def preProcessingDataSet(data_image_dir: str, target_size=100, batch_size=4):
     t4 = time.time()
     print(f"dataBase projection: {t4-t3}")
 
-    # Save the processed data using joblib
-    joblib.dump((image_paths, projected_data, eigenvectors, dataMean), 'processed_data.pkl')
+    return image_paths, projected_data, eigenvectors, dataMean
+    
 
 
-def queryImage(query_paths: list, target_size=100, batch_size=4):
+def queryImage(query_paths: list, cache_path: str, target_size=100, batch_size=4):
     """
     Integrates all image processing steps.
     Args:
@@ -164,8 +164,9 @@ def queryImage(query_paths: list, target_size=100, batch_size=4):
     Returns: 
         sorted: list of dictionaries with path as key and similarity percentage as value
     """
+    path = str(cache_path / "processed_data.pkl")
     # Load the processed data using joblib
-    image_paths, projected_data, eigenvectors, dataMean = joblib.load('processed_data.pkl')
+    image_paths, projected_data, eigenvectors, dataMean = joblib.load(path)
 
     print("Starting image processing...")
     startTime = time.time()
@@ -195,7 +196,7 @@ def queryImage(query_paths: list, target_size=100, batch_size=4):
     for similarity, img_path in sorted_similarities[:12]:
         print(f"Image: {img_path}, Similarity: {similarity:.2f}%")
         if similarity > 75:
-            sorted_by_percentage_images.append({"filepath": img_path, "score": similarity})
+            sorted_by_percentage_images.append({"filename": img_path, "score": similarity})
     return sorted_by_percentage_images
 
 

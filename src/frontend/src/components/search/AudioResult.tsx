@@ -76,7 +76,6 @@ export const AudioResult = () => {
               title={song.title}
               duration={"3:00"}
               number={index + 1}
-              audioSrc={song.audioSrc}
             />
           ))
         )}
