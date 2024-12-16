@@ -1,13 +1,11 @@
 "use client";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Song } from "../home/PopularSongs";
+import { SongSkeleton } from "../home/SongSkeleton";
+import { SongCard } from "../SongCard";
 
-export const ImageResult = () => {
-  // const limit = 12;
-
-  const router = useRouter();
+export const AudioResult = () => {
   const { toast } = useToast();
   const [resultAudios, setResultAudios] = useState<Song[]>([]);
   const [timeTaken, setTimeTaken] = useState(0);
@@ -23,11 +21,11 @@ export const ImageResult = () => {
         });
         if (response.ok) {
           const data = await response.json();
-          setresultImages(data.result || []);
+          setResultAudios(data.result || []);
           setTimeTaken(Number(data.time));
         } else {
           const errorData = await response.json();
-          setresultImages([]);
+          setResultAudios([]);
           setTimeTaken(0);
           toast({
             title: "Failed to fetch images",
@@ -36,7 +34,7 @@ export const ImageResult = () => {
           });
         }
       } catch (error) {
-        setresultImages([]);
+        setResultAudios([]);
         setTimeTaken(0);
         toast({
           title: "Failed to fetch images",
@@ -52,14 +50,9 @@ export const ImageResult = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full grid grid-cols-4 gap-y-8">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <div
-            className="bg-white rounded-2xl px-4 pt-4 pb-8 w-fit h-fit shadow-lg"
-            key={index}
-          >
-            <AlbumSkeleton />
-          </div>
+      <div className="flex flex-col w-full gap-3">
+        {Array.from({ length: 7 }).map((_, index) => (
+          <SongSkeleton key={index} />
         ))}
       </div>
     );
@@ -71,18 +64,18 @@ export const ImageResult = () => {
         Audio found in {timeTaken.toFixed(2)} seconds.
       </h1>
       <div className="flex flex-col w-full gap-3">
-        {uploadedAudios.length === 0 ? (
+        {resultAudios.length === 0 ? (
           <div className="h-64 w-full flex items-center justify-center">
             <p className="italic text-gray-500">No songs.</p>
           </div>
         ) : (
-          uploadedAudios.map((song, index) => (
+          resultAudios.map((song, index) => (
             <SongCard
               key={index}
               imgSrc={song.imgSrc}
               title={song.title}
               duration={"3:00"}
-              number={(Number(page) - 1) * limit + index + 1}
+              number={index + 1}
               audioSrc={song.audioSrc}
             />
           ))

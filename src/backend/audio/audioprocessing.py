@@ -107,19 +107,19 @@ def sliding_similarity(windows_a, windows_b):
 
 start = time.time()
 def preprocess_database(dataset_path):
+    # print(os.listdir(dataset_path))
     # List all folders inside dataset_path
-    all_folders = [f for f in os.listdir(dataset_path) if os.path.isdir(os.path.join(dataset_path, f))]
-
-    # Collect MIDI files from the selected folders
+    # all_folders = [f for f in os.listdir(dataset_path) if os.path.isdir(os.path.join(dataset_path, f))]
+    # # Collect MIDI files from the selected folders
     midi_files = []
 
-    for folder in all_folders:
-        folder_path = os.path.join(dataset_path, folder)
-        for root, dirs, files in os.walk(folder_path):
-            for file in files:
-                if file.endswith('.mid') and file.count('.') == 1:
-                    # Use os.path.join(root, file) directly
-                    midi_files.append(os.path.join(root, file))
+    # for folder in all_folders:
+    folder_path = dataset_path
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith('.mid') and file.count('.') == 1:
+                # Use os.path.join(root, file) directly
+                midi_files.append(os.path.join(root, file))
 
     midi_files = midi_files[:100]
     all_vect_hist = {}
@@ -145,7 +145,6 @@ def preprocess_database(dataset_path):
 def process_query(query_path, database):
     try:
         query_data = PrettyMIDI(query_path)
-
         # Process MIDI data
         query_windows = group_beat_by_window(query_data)
 
@@ -160,6 +159,7 @@ def process_query(query_path, database):
                 database[query_path].append([hist_atb,hist_rtb,hist_ftb])
 
         # compare query to database
+        print(len(database.keys()))
         for midi_file in database.keys():
             if(midi_file == query_path):
                 continue
