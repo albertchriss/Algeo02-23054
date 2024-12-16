@@ -67,6 +67,12 @@ def center_data(data, query):
     centered_query = query - mean_vector
     print("chris tes center query: ", time.time()-now)
     return centered_data , centered_query
+
+
+def center_data_with_mean(data, means):
+    return data - means
+def find_means(data):
+    return np.mean(data, axis=0, keepdims=True)
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                                                                                PCA
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +99,7 @@ def project_data(data, components):
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                                                                                COMPUTE SIMILARITY
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def compute_similarity(data, query): #euclidean distance
+def compute_similarity(data, query, threshold = 40): #euclidean distance
     """
     Computes similarity scores between data and query.
     Args:
@@ -104,20 +110,97 @@ def compute_similarity(data, query): #euclidean distance
     """
     similarities = []
     for i in range(data.shape[1]):
-        # Compute Euclidean distance manually
         distance = np.sqrt(np.sum((data[:, i] - query[:, 0]) ** 2))
-        similarities.append(distance)
-    # Sort distances in ascending order (smaller distance = more similar)
+        # similarities.append(distance)
+        similarity = max(0, 100 * (1 - distance / threshold))
+        similarities.append(similarity)
     return similarities
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                                                                                INTEGRATION
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def imageProcessing(data_image_dir, query_paths, target_size=200, num_components = 20, batch_size=6):
-    """Integrates all image processing steps."""
-    global progress
+def preProcessingDataSet(data_image_dir: str, target_size=100, batch_size=4):
+    """
+    Preprocesses data sets
+    Args:
+        data_image_dir (string): Folder path
+        target_size (integer): Desired feature resizing
+    Returns:
+        image_paths (list of string): Contains image path
+        projected_data (numpy array): Projected data matrix
+        eigenvectors (numpy array): Matrix representing top features
+        dataMean (numpy array): 1D array of integer of average features in number
+    """
 
-    progress = 0
-    yield 0
+    print("Starting image dataset processing...")
+    startTime = time.time()
+    #database picture to matrix---------------------------------------------------------------------------------------------------------------------
+    image_paths = get_image_paths(data_image_dir)
+    dataPicture = process_images_in_batches(image_paths, target_size, batch_size)
+    t1 = time.time()
+    print(f"imgDataBase to matrix: {t1-startTime}")
+    #centering dataPicture---------------------------------------------------------------------------------------------------------------------
+    dataMean = find_means(dataPicture)
+    t2 = time.time()
+    print(f"data centering: {t2-t1}")
+    #find eigenvectors---------------------------------------------------------------------------------------------------------------------
+    dataPicture_centered = center_data_with_mean(dataPicture, dataMean)
+    eigenvectors = compute_pca_svd(dataPicture_centered.T, 20)
+    t3= time.time()
+    print(f"principal component(PCA): {t3-t2}")
+    # Project dataPicture---------------------------------------------------------------------------------------------------------------------
+    projected_data = project_data(dataPicture_centered, eigenvectors)
+    t4 = time.time()
+    print(f"dataBase projection: {t4-t3}")
+    return image_paths, projected_data, eigenvectors, dataMean
+
+
+def queryImage(query_paths: list, image_paths: list , projected_data, eigenvectors, dataMean, target_size = 100, batch_size = 4):
+    """
+    Integrates all image processing steps.
+    Args:
+        query_paths (array of string): contains an array of path (1 picture)
+        image_paths (list of string): Contains image path
+        projected_data (numpy array): Projected data matrix
+        eigenvectors (numpy array): Matrix representing top features
+        dataMean (numpy array): 1D array of integer of average features in number
+    Returns: 
+        sorted: list of dictionaries with path as key and similarity percentage as value
+    """
+    print("Starting image processing...")
+    startTime = time.time()
+    #query to matrix---------------------------------------------------------------------------------------------------------------------
+    queryPicture = process_images_in_batches(query_paths, target_size, batch_size)
+    t1 = time.time()
+    print(f"imgQuery to matrix: {t1-startTime}")
+    #centering dataPicture---------------------------------------------------------------------------------------------------------------------
+    queryPicture_centered = center_data_with_mean(queryPicture, dataMean)
+    t2 = time.time()
+    print(f"data centering: {t2-t1}")
+    # Project queryPicture---------------------------------------------------------------------------------------------------------------------
+    projected_query = project_data(queryPicture_centered, eigenvectors)
+    t3 = time.time()
+    print(f"query projection: {t3-t2}")
+    
+    sorted_imgPaths = compute_similarity(projected_data, projected_query)
+    
+    t4 = time.time()
+    print(f"compute similarity: {t4-t3}")
+    sorted_similarities = sorted(
+        zip(sorted_imgPaths, image_paths), key=lambda x: x[0], reverse=True
+    )
+    t5 = time.time()
+    print(f"sortZip: {t5-t4}")
+    sorted_by_percentage_images = []
+    for similarity, img_path in sorted_similarities[:12]:
+        print(f"Image: {img_path}, Similarity: {similarity:.2f}%")
+        if similarity > 75:
+            sorted_by_percentage_images.append({"filepath": img_path, "score": similarity})
+    return sorted_by_percentage_images
+
+
+def imageProcessing(data_image_dir: str, query_paths: list, target_size=100, num_components = 20, batch_size=4):
+    """Integrates all image processing steps."""
+
     print("Starting image processing...")
     startTime = time.time()
     #database picture to matrix---------------------------------------------------------------------------------------------------------------------
@@ -125,40 +208,46 @@ def imageProcessing(data_image_dir, query_paths, target_size=200, num_components
     dataPicture = process_images_in_batches(image_paths, target_size, batch_size)
     t1 = time.time()
     print(f"imgDataBase to matrix: {t1-startTime}")
-    yield 10
+
     #query to matrix---------------------------------------------------------------------------------------------------------------------
     queryPicture = process_images_in_batches(query_paths, target_size, batch_size)
     t2 = time.time()
     print(f"imgQuery to matrix: {t2-t1}")
-    yield 20
+
     #centering dataPicture---------------------------------------------------------------------------------------------------------------------
     dataPicture_centered, queryPicture_centered = center_data(dataPicture, queryPicture)
     t3 = time.time()
     print(f"data centering: {t3-t2}")
-    yield 30
+
     #find eigenvectors---------------------------------------------------------------------------------------------------------------------
     eigenvectors = compute_pca_svd(dataPicture_centered.T, num_components)
     t4= time.time()
     print(f"principal component(PCA): {t4-t3}")
-    yield 50
+
     # Project dataPicture---------------------------------------------------------------------------------------------------------------------
     projected_data = project_data(dataPicture_centered, eigenvectors)
     t5 = time.time()
     print(f"dataBase projection: {t5-t4}")
-    yield 70
+
     # Project queryPicture---------------------------------------------------------------------------------------------------------------------
     projected_query = project_data(queryPicture_centered, eigenvectors)
     t6 = time.time()
     print(f"query projection: {t6-t5}")
-    yield 80
+
     # Compute---------------------------------------------------------------------------------------------------------------------
     sorted_imgPaths = compute_similarity(projected_data, projected_query)
-    sorted_imgPaths = np.argsort(np.array(sorted_imgPaths))
-    sorted_imgPaths = np.array(image_paths)[sorted_imgPaths]
+    sorted_similarities = sorted(
+        zip(sorted_imgPaths, image_paths), key=lambda x: x[0], reverse=True
+    )
+
+    sorted_by_percentage_images = {}
+    for similarity, img_path in sorted_similarities[:12]:
+        print(f"Image: {img_path}, Similarity: {similarity:.2f}%")
+        if similarity > 75:
+            sorted_by_percentage_images.append({"filepath": img_path, "score": similarity})
     t7 = time.time()
     print(f"compute similarity: {t7-t6}")
-    yield 90
-    return sorted_imgPaths
+    return sorted_by_percentage_images
 
 
 
@@ -169,52 +258,11 @@ def imageProcessing(data_image_dir, query_paths, target_size=200, num_components
 #                                                                                                USAGE EXAMPLE
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # if __name__ == '__main__':
-#     startTime = time.time()
-#     # #database picture to matrix---------------------------------------------------------------------------------------------------------------------
-#     data_image_dir = "dataImage/album_covers_512"
-#     # data_image_dir = "dataImage/Cover_Art"
-#     image_paths = get_image_paths(data_image_dir)
-#     target_size = 100
-#     dataPicture = process_images_in_batches(image_paths, target_size, batch_size=12)
-#     t0 = time.time()
-#     print(f"resizing: {t0 - startTime}")
-#     # #query to matrix---------------------------------------------------------------------------------------------------------------------
-#     query_paths = [r"C:\Users\WINDOWS 10\Desktop\CODING\Python3\tubesAlgeo2\Algeo02-23054\dataImage\album_covers_512\22.jpg"]
-#     # query_paths = [r"C:\Users\WINDOWS 10\Desktop\CODING\Python3\tubesAlgeo2\Algeo02-23054\dataImage\Cover_Art\1989_Taylor_sVersion__WebstoreDeluxe_.jpg"]  # Replace with query paths
-#     # query_paths = [r"C:\Users\WINDOWS 10\Desktop\CODING\Python3\tubesAlgeo2\Algeo02-23054\dataImage\Cover_Art\Midnights_TheTillDawnEdition_.jpg"]
-#     queryPicture = process_images_in_batches(query_paths, target_size, batch_size=6)
-#     t1 = time.time()
-#     print(f"imgDataBase to matrix: {t1-t0}")
-#     #centering dataPicture---------------------------------------------------------------------------------------------------------------------
-#     dataPicture_centered, queryPicture_centered = center_data(dataPicture, queryPicture)
-#     t2 = time.time()
-#     print(f"data centering: {t2-t1}")
-#     #find eigenvectors---------------------------------------------------------------------------------------------------------------------
-#     eigenvectors = compute_pca_svd(dataPicture_centered.T, 100)
-#     t3= time.time()
-#     print(f"principal component(PCA): {t3-t2}")
-#     # Project dataPicture---------------------------------------------------------------------------------------------------------------------
-#     projected_data = project_data(dataPicture_centered.T, eigenvectors.T)
-#     # projected_data = project_with_ipca(ipca, dataPicture_centered)
-#     t4 = time.time()
-#     print(f"dataBase projection: {t4-t3}")
-#     # Project queryPicture---------------------------------------------------------------------------------------------------------------------
-#     projected_query = project_data(queryPicture_centered.T, eigenvectors.T)
-#     t5 = time.time()
-#     print(f"query projection: {t5-t4}")
-#     # Compute---------------------------------------------------------------------------------------------------------------------
-#     t6 = time.time()
-#     print(f"compute similarity: {t6-t5}")
-#     # Sort similarities---------------------------------------------------------------------------------------------------------------------
-#     similarity_rank = compute_similarity(projected_data, projected_query)
-#     idx_similarity_rank_sorted = np.argsort(np.array(similarity_rank))
-#     t7 = time.time()
-#     print(f"ngerank berdasarkan kemiripan: {t7-t6}")
-#     # Sort image path---------------------------------------------------------------------------------------------------------------------
-#     image_paths = np.array(image_paths)[idx_similarity_rank_sorted]
-#     t8 = time.time()
-#     print(f"ngurutin berdasarkan rank: {t8-t7}")
-#     # Print sorted image path---------------------------------------------------------------------------------------------------------------------
-#     print(image_paths[:10]) 
-#     # Print time needed---------------------------------------------------------------------------------------------------------------------
-#     print(f"total time: {t8-startTime}")
+#     print("start")
+#     imgPath, projData, eigen, datMean = preProcessingDataSet(r"D:\album_covers_512")
+#     res = queryImage([r"D:\album_covers_512\22.jpg"], imgPath, projData, eigen, datMean)
+#     print(res[0]["score"])
+#     print("end")
+    # print("start2")
+    # res = imageProcessing(r"D:\album_covers_512", [r"D:\album_covers_512\22.jpg"])
+    # print("end2")
