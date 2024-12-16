@@ -170,20 +170,25 @@ def queryImage(query_paths: list, cache_path: str, target_size=100, batch_size=4
 
     print("Starting image processing...")
     startTime = time.time()
+    yield 10
     #query to matrix---------------------------------------------------------------------------------------------------------------------
     queryPicture = process_images_in_batches(query_paths, target_size, batch_size)
     t1 = time.time()
     print(f"imgQuery to matrix: {t1-startTime}")
+    yield 20
     #centering dataPicture---------------------------------------------------------------------------------------------------------------------
     queryPicture_centered = center_data_with_mean(queryPicture, dataMean)
     t2 = time.time()
     print(f"data centering: {t2-t1}")
+    yield 30
     # Project queryPicture---------------------------------------------------------------------------------------------------------------------
     projected_query = project_data(queryPicture_centered, eigenvectors)
     t3 = time.time()
     print(f"query projection: {t3-t2}")
+    yield 40
     
     sorted_imgPaths = compute_similarity(projected_data, projected_query)
+    yield 60
     
     t4 = time.time()
     print(f"compute similarity: {t4-t3}")
@@ -192,11 +197,13 @@ def queryImage(query_paths: list, cache_path: str, target_size=100, batch_size=4
     )
     t5 = time.time()
     print(f"sortZip: {t5-t4}")
+    yield 80
     sorted_by_percentage_images = []
     for similarity, img_path in sorted_similarities[:12]:
         print(f"Image: {img_path}, Similarity: {similarity:.2f}%")
         if similarity > 75:
             sorted_by_percentage_images.append({"filename": img_path, "score": similarity})
+    yield 100
     return sorted_by_percentage_images
 
 

@@ -66,41 +66,47 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                     return
 
                 
-                yield "data: 10\n\n"
+                yield "data: 0\n\n"
 
                 now = time.time()
                 result = None
                 
                 if is_image:
                 # Start image processing and stream progress
-                    result = queryImage([str(extracted_file_path)], DATASET_DIR)
-                    # generator = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
-                    # while True:
-                    #     try:
-                    #         progress = next(generator)  # Get the next progress value
-                    #         yield f"data: {progress}\n\n"
-                    #     except StopIteration as stop_result:
-                    #         # Capture the final result from the generator
-                    #         result = stop_result.value
-                    #         break
+                    # result = queryImage([str(extracted_file_path)], DATASET_DIR)
+                    generator = queryImage([str(extracted_file_path)], DATASET_DIR)
+                    while True:
+                        try:
+                            progress = next(generator)  # Get the next progress value
+
+                            yield f"data: {progress}\n\n"
+                        except StopIteration as stop_result:
+                            # Capture the final result from the generator
+                            result = stop_result.value
+                            break
 
                 else:
                     # Load the preprocessed database if it exists, otherwise preprocess and save it
                     database_path = DATASET_DIR / "preprocessed_database.pkl"
                     if database_path.exists():
                         database = joblib.load(database_path)
+                    generator = process_query(str(extracted_file_path), database)
 
-                    print(len(database))
-                    result = process_query(str(extracted_file_path), database)
-                    print(result[:limit])
-                    # print(result)
+                    while True:
+                        try:
+                            progress = next(generator)  # Get the next progress value
 
+                            yield f"data: {progress}\n\n"
+                        except StopIteration as stop_result:
+                            # Capture the final result from the generator
+                            result = stop_result.value
+                            break
                 time_taken = time.time() - now
                 query_file_path = QUERY_RESULT_DIR / "result.txt"
                 
                 with open(query_file_path, "w", encoding="utf-8") as query_file:
                     for res in result[:limit]:
-                        query_file.write(f"{res["filename"]} {res["score"]}\n")
+                        query_file.write(f"{res['filename']} {res['score']}\n")
                     query_file.write(str(time_taken) + "\n")
                 
                 yield "data: 100\n\n"
@@ -197,44 +203,48 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
 
     try:
         zip_data = await file_upload.read()
-
-        # extract zip file
-        with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_ref:
-            for file_info in zip_ref.infolist():
-                # Skip directories
-                if file_info.is_dir():
-                    continue
-
-                file_name = file_info.filename
-                # check jika file adalah file gambar atau file audio
-                if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
-                    extracted_file_path = DATASET_DIR / Path(file_name).name
-                    try:
-                        with open(extracted_file_path, "wb") as extracted_file:
-                            extracted_file.write(zip_ref.read(file_name))
-                    except:
-                        print(f"Failed to write file: {file_name}")
+        progress = 10
+        async def processing_with_progress():
+            nonlocal progress
+            yield "data: 10\n\n"
+            # extract zip file
+            with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_ref:
+                increment = 70 / len(zip_ref.infolist())
+                for file_info in zip_ref.infolist():
+                    # Skip directories
+                    if file_info.is_dir():
                         continue
-                
-                # file bukan file gambar atau file audio
-                else:
-                    continue
+
+                    file_name = file_info.filename
+                    # check jika file adalah file gambar atau file audio
+                    if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
+                        extracted_file_path = DATASET_DIR / Path(file_name).name
+                        try:
+                            with open(extracted_file_path, "wb") as extracted_file:
+                                extracted_file.write(zip_ref.read(file_name))
+                        except:
+                            print(f"Failed to write file: {file_name}")
+                            continue
+                    
+                    # file bukan file gambar atau file audio
+                    else:
+                        continue
+                    progress += increment
+                    yield f"data: {progress}\n\n"
         
-        if (is_image):
-            image_paths, projected_data, eigenvectors, dataMean = preProcessingDataSet(DATASET_DIR)
-            # Save the processed data using joblib
-            path = DATASET_DIR / "processed_data.pkl"
-            joblib.dump((image_paths, projected_data, eigenvectors, dataMean), path)
-        else:
-            database = preprocess_database(DATASET_DIR)
-            path = DATASET_DIR / "preprocessed_database.pkl"
-            joblib.dump(database, path)
-                        
-        data_urls = [
-            f"http://localhost:8000/uploads/dataset/{file_name}"
-            for file_name in os.listdir(DATASET_DIR)
-        ]
-        return {"uploaded_images": data_urls}
+            if (is_image):
+                image_paths, projected_data, eigenvectors, dataMean = preProcessingDataSet(DATASET_DIR)
+                # Save the processed data using joblib
+                path = DATASET_DIR / "processed_data.pkl"
+                joblib.dump((image_paths, projected_data, eigenvectors, dataMean), path)
+            else:
+                database = preprocess_database(DATASET_DIR)
+                path = DATASET_DIR / "preprocessed_database.pkl"
+                joblib.dump(database, path)
+        
+            yield f"data: 100\n\n"
+
+        return StreamingResponse(processing_with_progress(), media_type="text/event-stream")
     
     except zipfile.BadZipFile:
         raise HTTPException(status_code=400, detail="Invalid zip file")
