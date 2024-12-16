@@ -67,7 +67,7 @@ export const SongList = () => {
     return (
       <div className="w-full space-y-4">
         <div className="flex flex-col w-full gap-3">
-          {Array.from({ length: 5 }).map((_, index) => (
+          {Array.from({ length: 7 }).map((_, index) => (
             <SongSkeleton key={index} />
           ))}
         </div>

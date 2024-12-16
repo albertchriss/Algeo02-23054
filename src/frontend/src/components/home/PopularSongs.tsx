@@ -52,7 +52,7 @@ export const PopularSongs = () => {
       <div className="w-full space-y-4">
         <h1 className="font-bold text-3xl text-biru-teks">Some Musics</h1>
         <div className="flex flex-col w-full gap-3">
-          {Array.from({ length: 5 }).map((_, index) => (
+          {Array.from({ length: 7 }).map((_, index) => (
             <SongSkeleton key={index} />
           ))}
         </div>

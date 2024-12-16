@@ -5,6 +5,8 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { Progress } from "../ui/progress";
 
 type QueryType = "image" | "audio";
 
@@ -17,8 +19,9 @@ interface QueryCardProps {
 export const QueryCard = ({ types, children, className }: QueryCardProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null); 
-  const [query, setQuery] = useState<string | null>(null); 
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const router = useRouter();
   const { toast } = useToast();
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0] || null;
@@ -44,7 +47,7 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
     const formData = new FormData();
     if (file) {
       formData.append("file_upload", file);
@@ -54,30 +57,72 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
         formData.append("is_image", "false");
       }
     }
-
+  
     try {
       setIsLoading(true);
+      setProgress(0); // Initialize progress state
+  
       const endPoint = "http://localhost:8000/uploadquery/";
       const response = await fetch(endPoint, {
         method: "POST",
         body: formData,
       });
-
-      if (response.ok) {
-        console.log("File uploaded successfully");
-        const responseData = await response.json();
-        setQuery(responseData.file_name);
-        toast({
-          title: "File uploaded successfully",
-          variant: "default",
-        });
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Failed to upload file.",
-          description: errorData.detail,
-          variant: "destructive",
-        });
+  
+      // SSE stream reading starts here
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Failed to read response stream.");
+      }
+  
+      const decoder = new TextDecoder();
+      let done = false;
+      let receivedText = "";
+  
+      while (!done) {
+        const { value, done: streamDone } = await reader.read();
+        done = streamDone;
+  
+        if (value) {
+          receivedText += decoder.decode(value, { stream: true });
+  
+          // Process each line of the SSE message
+          const messages = receivedText.split("\n\n"); // Split by SSE message format
+          for (const message of messages) {
+            if (message.startsWith("data:")) {
+              const data = message.slice(5).trim();
+  
+              // Handle error messages
+              if (data.startsWith("error:")) {
+                const errorMessage = data.slice(6).trim();
+                toast({
+                  title: "Error during processing",
+                  description: errorMessage,
+                  variant: "destructive",
+                });
+                setIsLoading(false);
+                return;
+              }
+  
+              // Update progress
+              const progress = parseInt(data, 10);
+              if (!isNaN(progress)) {
+                setProgress(progress);
+              }
+  
+              // If progress reaches 100, finish loading
+              if (progress === 100) {
+                toast({
+                  title: "File processed successfully",
+                  variant: "default",
+                });
+                router.push(`/search/result`);
+              }
+            }
+          }
+  
+          // Remove processed messages
+          receivedText = "";
+        }
       }
     } catch (error) {
       toast({
@@ -89,9 +134,10 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
       setIsLoading(false);
     }
   };
+  
 
   return (
-    <form className="space-y-3 mb-10" onSubmit={handleSubmit}>
+    <form className="space-y-3 mb-10" onSubmit={handleSubmit} >
       <h1 className="text-2xl font-bold mb-2">Upload {types} file</h1>
       <Label htmlFor="file_upload">
         Upload an {types} file
@@ -118,6 +164,11 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
       <Button type="submit" disabled={!file || isLoading} className="w-full">
         Submit
       </Button>
+      {
+        isLoading && (
+          <Progress value={progress} />
+        )
+      }
     </form>
   );
 };

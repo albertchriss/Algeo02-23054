@@ -4,12 +4,13 @@ import time
 import os
 from concurrent.futures import ProcessPoolExecutor
 from scipy.sparse.linalg import svds
+import asyncio
 
 # cara menggunakan: 
 # hasil = imageProcess(data_image_dir, query_paths)
 
 
-
+progress = 0
 
 #keterangan kode:
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,7 +24,7 @@ def get_image_paths(directory):
     Returns:
         list: List of image file paths.
     """
-    supported_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.tiff')  # Add more extensions if needed
+    supported_extensions = ('.jpg', '.jpeg', '.png')  # Add more extensions if needed
     image_paths = [
         os.path.join(directory, file)
         for file in os.listdir(directory)
@@ -55,9 +56,16 @@ def center_data(data, query):
     Returns:
         numpy array: Centered data matrix.
     """
+    now = time.time()
     mean_vector = np.mean(data, axis=0, keepdims=True)
+    print(len(data))
+    print("chris tes mean: ", time.time()-now)
+    now = time.time()
     centered_data = data - mean_vector
+    print("chris tes center: ", time.time()-now)
+    now = time.time()
     centered_query = query - mean_vector
+    print("chris tes center query: ", time.time()-now)
     return centered_data , centered_query
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                                                                                PCA
@@ -106,29 +114,50 @@ def compute_similarity(data, query): #euclidean distance
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def imageProcessing(data_image_dir, query_paths, target_size=200, num_components = 20, batch_size=6):
     """Integrates all image processing steps."""
+    global progress
+
+    progress = 0
+    yield 0
+    print("Starting image processing...")
+    startTime = time.time()
     #database picture to matrix---------------------------------------------------------------------------------------------------------------------
     image_paths = get_image_paths(data_image_dir)
     dataPicture = process_images_in_batches(image_paths, target_size, batch_size)
-
+    t1 = time.time()
+    print(f"imgDataBase to matrix: {t1-startTime}")
+    yield 10
     #query to matrix---------------------------------------------------------------------------------------------------------------------
     queryPicture = process_images_in_batches(query_paths, target_size, batch_size)
-
+    t2 = time.time()
+    print(f"imgQuery to matrix: {t2-t1}")
+    yield 20
     #centering dataPicture---------------------------------------------------------------------------------------------------------------------
     dataPicture_centered, queryPicture_centered = center_data(dataPicture, queryPicture)
-
+    t3 = time.time()
+    print(f"data centering: {t3-t2}")
+    yield 30
     #find eigenvectors---------------------------------------------------------------------------------------------------------------------
     eigenvectors = compute_pca_svd(dataPicture_centered.T, num_components)
-
+    t4= time.time()
+    print(f"principal component(PCA): {t4-t3}")
+    yield 50
     # Project dataPicture---------------------------------------------------------------------------------------------------------------------
     projected_data = project_data(dataPicture_centered, eigenvectors)
-
+    t5 = time.time()
+    print(f"dataBase projection: {t5-t4}")
+    yield 70
     # Project queryPicture---------------------------------------------------------------------------------------------------------------------
     projected_query = project_data(queryPicture_centered, eigenvectors)
-
+    t6 = time.time()
+    print(f"query projection: {t6-t5}")
+    yield 80
     # Compute---------------------------------------------------------------------------------------------------------------------
     sorted_imgPaths = compute_similarity(projected_data, projected_query)
     sorted_imgPaths = np.argsort(np.array(sorted_imgPaths))
     sorted_imgPaths = np.array(image_paths)[sorted_imgPaths]
+    t7 = time.time()
+    print(f"compute similarity: {t7-t6}")
+    yield 90
     return sorted_imgPaths
 
 
