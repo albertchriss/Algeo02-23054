@@ -10,7 +10,7 @@ import os
 from tools import *
 from pydantic import BaseModel
 from image.image_processing import imageProcessing
-from image.image_processing import progress
+from audio.audioprocessing import process_query, preprocess_database
 import time
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
@@ -43,6 +43,7 @@ async def read_root():
 
 @app.post('/uploadquery/')
 async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...), limit: int = Query(12)):
+    is_image = is_image.lower() == "true"
     try:
         contents = await file_upload.read()
     except:
@@ -68,17 +69,26 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 yield "data: 10\n\n"
 
                 now = time.time()
+                result = None
+                
+                if is_image:
                 # Start image processing and stream progress
-                generator = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
-                result = []
-                while True:
-                    try:
-                        progress = next(generator)  # Get the next progress value
-                        yield f"data: {progress}\n\n"
-                    except StopIteration as stop_result:
-                        # Capture the final result from the generator
-                        result = stop_result.value
-                        break
+                    generator = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
+                    while True:
+                        try:
+                            progress = next(generator)  # Get the next progress value
+                            yield f"data: {progress}\n\n"
+                        except StopIteration as stop_result:
+                            # Capture the final result from the generator
+                            result = stop_result.value
+                            break
+
+                else:
+                    database = preprocess_database(DATASET_DIR)
+                    print(len(database))
+                    result = process_query(str(extracted_file_path), database)
+                    print(result[:limit])
+                    result = [res["filename"] for res in result]
                     # print(result)
 
                 time_taken = time.time() - now
@@ -107,6 +117,16 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
         
     return StreamingResponse(processing_with_progress(), media_type="text/event-stream")
 
+@app.get('/query/type/')
+async def get_query_type():
+    if (not os.listdir(QUERY_DIR)):
+        raise HTTPException(status_code=404, detail="No query found")
+    query_file = os.listdir(QUERY_DIR)[0]
+    if (is_image_file(query_file)):
+        return {"type": "image"}
+    else:
+        return {"type": "audio"}
+
 @app.get('/query/')
 async def get_query_result(is_image: bool = Query(0)):
     if (not os.listdir(QUERY_RESULT_DIR)):
@@ -126,8 +146,8 @@ async def get_query_result(is_image: bool = Query(0)):
         mapper = await read_mapper()
         mapper = mapper["mappers"]
         result = [ {
-                    "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name.strip()][0]}", 
-                    "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name.strip()}",
+                    "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name[file_name.rfind('\\')+1:].strip()][0]}", 
+                    "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name[file_name.rfind('\\')+1:].strip()}",
                     "title": Path(file_name.strip()).stem
                 } for file_name in query_files[:-1]]
         
