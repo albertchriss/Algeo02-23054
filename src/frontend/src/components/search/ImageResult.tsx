@@ -12,6 +12,7 @@ export const ImageResult = () => {
   const router = useRouter();
   const { toast } = useToast();
   const [resultImages, setresultImages] = useState<Album[]>([]);
+  const [timeTaken, setTimeTaken] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -25,8 +26,11 @@ export const ImageResult = () => {
         if (response.ok) {
           const data = await response.json();
           setresultImages(data.result || []);
+          setTimeTaken(Number(data.time));
         } else {
           const errorData = await response.json();
+          setresultImages([]);
+          setTimeTaken(0);
           toast({
             title: "Failed to fetch images",
             description: errorData.detail,
@@ -34,6 +38,8 @@ export const ImageResult = () => {
           });
         }
       } catch (error) {
+        setresultImages([]);
+        setTimeTaken(0);
         toast({
           title: "Failed to fetch images",
           description: (error as Error).message,
@@ -63,6 +69,7 @@ export const ImageResult = () => {
 
   return (
     <>
+      <h1 className='text-3xl'>Images found in {timeTaken.toFixed(2)} seconds.</h1>
       <div className="w-full grid grid-cols-4 gap-y-8">
         {resultImages.length === 0 ? (
           <div className="h-[200px] col-span-3 flex justify-center items-center">

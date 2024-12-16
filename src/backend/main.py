@@ -2,6 +2,7 @@ from fastapi import FastAPI, Query, Form
 from fastapi import UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import StreamingResponse
 from pathlib import Path
 import zipfile
 import io
@@ -9,6 +10,8 @@ import os
 from tools import *
 from pydantic import BaseModel
 from image.image_processing import imageProcessing
+from image.image_processing import progress
+import time
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 MAPPER_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
@@ -39,46 +42,101 @@ async def read_root():
     return {"message": "Welcome to the backend!"}
 
 @app.post('/uploadquery/')
-async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)):
+async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...), limit: int = Query(12)):
     try:
-        delete_query()
-        delete_query_result()
-        file_name = file_upload.filename
-        if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
-            extracted_file_path = QUERY_DIR / Path(file_name).name
-            try:
-                contents = await file_upload.read()
-                with open(extracted_file_path, "wb") as extracted_file:
-                    extracted_file.write(contents)
-            except:
-                print(f"Failed to write file: {file_name}")
-
-            result = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
-            for idx, res in enumerate(result[:12]):
-                contents = open(res, "rb").read()
-                query_file_path = QUERY_RESULT_DIR / f"{idx:02d}_{Path(res).name}"
-                with open(query_file_path, "wb") as query_file:
-                    query_file.write(contents)
-
-    except HTTPException as http_exc:
-        # Re-raise the HTTP exceptions that are meant to provide specific feedback
-        raise http_exc
-    except Exception as exc:
-        # Catch any other exceptions and raise a generic HTTP exception
+        contents = await file_upload.read()
+    except:
         raise HTTPException(status_code=400, detail="Invalid file")
+    async def processing_with_progress():
+        try:
+            delete_query()
+            delete_query_result()
+            file_name = file_upload.filename
+            print(file_name)
+            if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
+                extracted_file_path = QUERY_DIR / Path(file_name).name
+                print(extracted_file_path)
+                try:
+                    # contents = await file_upload.read()
+                    with open(extracted_file_path, "wb") as extracted_file:
+                        extracted_file.write(contents)
+                except:
+                    yield f"data: error:Failed to write file: {file_name}\n\n"
+                    return
+
+                
+                yield "data: 10\n\n"
+
+                now = time.time()
+                # Start image processing and stream progress
+                generator = imageProcessing(DATASET_DIR, [str(extracted_file_path)])
+                result = []
+                while True:
+                    try:
+                        progress = next(generator)  # Get the next progress value
+                        yield f"data: {progress}\n\n"
+                    except StopIteration as stop_result:
+                        # Capture the final result from the generator
+                        result = stop_result.value
+                        break
+                    # print(result)
+
+                time_taken = time.time() - now
+                query_file_path = QUERY_RESULT_DIR / "result.txt"
+                
+                with open(query_file_path, "w", encoding="utf-8") as query_file:
+                    for res in result[:limit]:
+                        query_file.write(res + "\n")
+                    query_file.write(str(time_taken) + "\n")
+                
+                yield "data: 100\n\n"
+            else:
+                yield f"data: error:Invalid file type\n\n" 
+                return    
+
+        except HTTPException as http_exc:
+            # Re-raise the HTTP exceptions that are meant to provide specific feedback
+            # raise http_exc
+            yield f"data: error:{str(http_exc)}\n\n"  
+            return
+        except Exception as exc:
+            # Catch any other exceptions and raise a generic HTTP exception
+            # raise HTTPException(status_code=400, detail="Invalid file")
+            yield f"data: error:{str(exc)}\n\n" 
+            return 
+        
+    return StreamingResponse(processing_with_progress(), media_type="text/event-stream")
 
 @app.get('/query/')
 async def get_query_result(is_image: bool = Query(0)):
     if (not os.listdir(QUERY_RESULT_DIR)):
         raise HTTPException(status_code=404, detail="No query found")
 
-    query_files = os.listdir(QUERY_RESULT_DIR)
-    result = [ {
-                "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name[3:]}", 
-                "title": file_name[3:]
-            } for file_name in query_files]
+    query_file = os.listdir(QUERY_RESULT_DIR)[0]
 
-    return {"result": result}
+    with open(QUERY_RESULT_DIR / query_file, "r") as file_object:
+        query_files = file_object.readlines()
+
+    if (is_image):
+        result = [ {
+                    "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name[file_name.rfind('\\')+1:].strip()}", 
+                    "title": file_name[file_name.rfind('\\')+1:].strip()
+                } for file_name in query_files[:-1]]
+    else:
+        mapper = await read_mapper()
+        mapper = mapper["mappers"]
+        result = [ {
+                    "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name.strip()][0]}", 
+                    "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name.strip()}",
+                    "title": Path(file_name.strip()).stem
+                } for file_name in query_files[:-1]]
+        
+    if len(result) == 0:
+        raise HTTPException(status_code=404, detail="No query result found")
+
+    time_taken = query_files[-1]
+
+    return {"result": result, "time": time_taken}
 
 @app.post('/uploadmapper/')
 async def create_upload_mapper(file_upload: UploadFile):
