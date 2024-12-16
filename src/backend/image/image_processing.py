@@ -4,7 +4,7 @@ import time
 import os
 from concurrent.futures import ProcessPoolExecutor
 from scipy.sparse.linalg import svds
-import asyncio
+import joblib
 
 # cara menggunakan: 
 # hasil = imageProcess(data_image_dir, query_paths)
@@ -151,21 +151,22 @@ def preProcessingDataSet(data_image_dir: str, target_size=100, batch_size=4):
     projected_data = project_data(dataPicture_centered, eigenvectors)
     t4 = time.time()
     print(f"dataBase projection: {t4-t3}")
-    return image_paths, projected_data, eigenvectors, dataMean
+
+    # Save the processed data using joblib
+    joblib.dump((image_paths, projected_data, eigenvectors, dataMean), 'processed_data.pkl')
 
 
-def queryImage(query_paths: list, image_paths: list , projected_data, eigenvectors, dataMean, target_size = 100, batch_size = 4):
+def queryImage(query_paths: list, target_size=100, batch_size=4):
     """
     Integrates all image processing steps.
     Args:
         query_paths (array of string): contains an array of path (1 picture)
-        image_paths (list of string): Contains image path
-        projected_data (numpy array): Projected data matrix
-        eigenvectors (numpy array): Matrix representing top features
-        dataMean (numpy array): 1D array of integer of average features in number
     Returns: 
         sorted: list of dictionaries with path as key and similarity percentage as value
     """
+    # Load the processed data using joblib
+    image_paths, projected_data, eigenvectors, dataMean = joblib.load('processed_data.pkl')
+
     print("Starting image processing...")
     startTime = time.time()
     #query to matrix---------------------------------------------------------------------------------------------------------------------
@@ -259,10 +260,11 @@ def imageProcessing(data_image_dir: str, query_paths: list, target_size=100, num
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # if __name__ == '__main__':
 #     print("start")
-#     imgPath, projData, eigen, datMean = preProcessingDataSet(r"D:\album_covers_512")
-#     res = queryImage([r"D:\album_covers_512\22.jpg"], imgPath, projData, eigen, datMean)
-#     print(res[0]["score"])
-#     print("end")
+    # imgPath, projData, eigen, datMean = 
+    # preProcessingDataSet(r"D:\album_covers_512")
+    # res = queryImage([r"D:\album_covers_512\22.jpg"])
+    # print(res[0]["score"])
+    # print("end")
     # print("start2")
     # res = imageProcessing(r"D:\album_covers_512", [r"D:\album_covers_512\22.jpg"])
     # print("end2")
