@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "../ui/progress";
 
 type DatasetType = "image" | "audio" | "mapper";
 
@@ -20,6 +21,7 @@ export const DatasetUpload = ({
 }: DatasetUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files?.[0] || null);
@@ -88,19 +90,73 @@ export const DatasetUpload = ({
         body: formData,
       });
 
-      if (response.ok) {
-        console.log("File uploaded successfully");
-        toast({
-          title: "File uploaded successfully",
-          variant: "default",
-        });
+      if (types === "mapper") {
+        if (response.ok) {
+          console.log("File uploaded successfully");
+          toast({
+            title: "File uploaded successfully",
+            variant: "default",
+          });
+        } else {
+          const errorData = await response.json();
+          toast({
+            title: "Failed to upload file.",
+            description: errorData.detail,
+            variant: "destructive",
+          });
+        }
       } else {
-        const errorData = await response.json();
-        toast({
-          title: "Failed to upload file.",
-          description: errorData.detail,
-          variant: "destructive",
-        });
+        // SSE stream reading starts here
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error("Failed to read response stream.");
+        }
+
+        const decoder = new TextDecoder();
+        let done = false;
+        let receivedText = "";
+
+        while (!done) {
+          const { value, done: streamDone } = await reader.read();
+          done = streamDone;
+
+          if (value) {
+            receivedText += decoder.decode(value, { stream: true });
+
+            // Process each line of the SSE message
+            const messages = receivedText.split("\n\n"); // Split by SSE message format
+            for (const message of messages) {
+              if (message.startsWith("data:")) {
+                const data = message.slice(5).trim();
+
+                // Handle error messages
+                if (data.startsWith("error:")) {
+                  const errorMessage = data.slice(6).trim();
+                  toast({
+                    title: "Error during processing",
+                    description: errorMessage,
+                    variant: "destructive",
+                  });
+                  setIsLoading(false);
+                  return;
+                }
+
+                // Update progress
+                const progress = parseInt(data, 10);
+                if (!isNaN(progress)) {
+                  setProgress(progress);
+                }
+                // If progress reaches 100, finish loading
+                if (progress === 100) {
+                  toast({
+                    title: "Dataset uploaded successfully",
+                    variant: "default",
+                  });
+                }
+              }
+            }
+          }
+        }
       }
     } catch (error) {
       toast({
@@ -150,6 +206,7 @@ export const DatasetUpload = ({
           Generate mapper
         </Button>
       )}
+      {isLoading && <Progress value={progress} />}
     </form>
   );
 };
