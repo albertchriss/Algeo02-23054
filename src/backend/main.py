@@ -53,10 +53,8 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
             delete_query()
             delete_query_result()
             file_name = file_upload.filename
-            print(file_name)
             if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
                 extracted_file_path = QUERY_DIR / Path(file_name).name
-                print(extracted_file_path)
                 try:
                     # contents = await file_upload.read()
                     with open(extracted_file_path, "wb") as extracted_file:
@@ -219,12 +217,11 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
                     file_name = file_info.filename
                     # check jika file adalah file gambar atau file audio
                     if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
-                        extracted_file_path = DATASET_DIR / Path(file_name).name
+                        extracted_file_path = DATASET_DIR / Path(file_name.replace(" ", "_")).name
                         try:
                             with open(extracted_file_path, "wb") as extracted_file:
                                 extracted_file.write(zip_ref.read(file_name))
                         except:
-                            print(f"Failed to write file: {file_name}")
                             continue
                     
                     # file bukan file gambar atau file audio
@@ -362,9 +359,6 @@ async def generate_mapper():
 
     if (len(midi_data) == 0):
         raise HTTPException(status_code=400, detail="No midi files found")
-
-    # if (len(image_data) > len(midi_data)):
-    #     raise HTTPException(status_code=400, detail="Image files cannot be more than midi files")
 
     # for midi in midi_data:
     mapper_path = MAPPER_DIR / "mapper.txt"
