@@ -2,7 +2,6 @@ import numpy as np
 from pretty_midi import PrettyMIDI
 import os
 import time
-import mido
 # Function to group notes by beat
 def group_notes_by_beat(midi_data):
     # midi = PrettyMIDI(midi_file)
