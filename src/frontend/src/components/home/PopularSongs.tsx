@@ -19,7 +19,8 @@ export const PopularSongs = () => {
     const fetchAudios = async () => {
       try {
         setIsLoading(true);
-        const endPoint = "http://localhost:8000/dataset/?is_image=false&page=1&limit=7";
+        const endPoint =
+          "http://localhost:8000/dataset/?is_image=false&page=1&limit=7";
         const response = await fetch(endPoint, {
           method: "GET",
         });
@@ -47,7 +48,7 @@ export const PopularSongs = () => {
     fetchAudios();
   }, []);
 
-  if (isLoading){
+  if (isLoading) {
     return (
       <div className="w-full space-y-4">
         <h1 className="font-bold text-3xl text-biru-teks">Some Musics</h1>
@@ -57,29 +58,27 @@ export const PopularSongs = () => {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="w-full space-y-4">
       <h1 className="font-bold text-3xl text-biru-teks">Some Musics</h1>
       <div className="flex flex-col w-full gap-3">
-        {
-          uploadedAudios.length === 0 ?
+        {uploadedAudios.length === 0 ? (
           <div className="h-64 w-full flex items-center justify-center">
             <p className="italic text-gray-500">No songs.</p>
           </div>
-          :
+        ) : (
           uploadedAudios.map((song, index) => (
             <SongCard
               key={index}
               imgSrc={song.imgSrc}
               title={song.title}
-              duration={"3:00"}
               number={index + 1}
             />
           ))
-        }
+        )}
       </div>
     </div>
   );

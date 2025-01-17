@@ -11,7 +11,7 @@ def delete_dataset(is_image: bool):
     for file in os.listdir(DATASET_DIR):
         if (is_image and file.endswith((".png", ".jpg", ".jpeg"))):
             os.remove(DATASET_DIR / file)
-        if (not is_image and file.endswith((".midi"))):
+        if (not is_image and file.endswith((".mid"))):
             os.remove(DATASET_DIR / file)
     return {"message": "Dataset deleted"}
 

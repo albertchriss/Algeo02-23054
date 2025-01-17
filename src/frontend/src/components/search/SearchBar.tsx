@@ -16,10 +16,9 @@ export const SearchBar = ({ currentUrl }: SearchBarProps) => {
   const handleOnSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchInput.trim()) {
-        router.push(`${currentUrl}?q=${searchInput}`);
-    }
-    else{
-        router.push(`${currentUrl}`);
+      router.push(`${currentUrl}?q=${searchInput}`);
+    } else {
+      router.push(`${currentUrl}`);
     }
   };
 

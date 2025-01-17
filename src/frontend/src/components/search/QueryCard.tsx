@@ -18,7 +18,7 @@ interface QueryCardProps {
 
 export const QueryCard = ({ types, children, className }: QueryCardProps) => {
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null); 
+  const [preview, setPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const router = useRouter();
@@ -28,14 +28,12 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
     setFile(uploadedFile);
     // Generate preview URL for the uploaded image
     if (uploadedFile && uploadedFile.type.startsWith("image/")) {
-        const url = URL.createObjectURL(uploadedFile);
-        setPreview(url);
-    } 
-    else if (uploadedFile && uploadedFile.type.startsWith("audio/")) {
-        setPreview(uploadedFile.name)
-    }
-    else {
-        setPreview(null);
+      const url = URL.createObjectURL(uploadedFile);
+      setPreview(url);
+    } else if (uploadedFile && uploadedFile.type.startsWith("audio/")) {
+      setPreview(uploadedFile.name);
+    } else {
+      setPreview(null);
     }
   };
 
@@ -43,11 +41,11 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
 
   const handleElementClick = () => {
     fileInputRef.current?.click();
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+
     const formData = new FormData();
     if (file) {
       formData.append("file_upload", file);
@@ -57,40 +55,40 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
         formData.append("is_image", "false");
       }
     }
-  
+
     try {
       setIsLoading(true);
       setProgress(0); // Initialize progress state
-  
+
       const endPoint = "http://localhost:8000/uploadquery/";
       const response = await fetch(endPoint, {
         method: "POST",
         body: formData,
       });
-  
+
       // SSE stream reading starts here
       const reader = response.body?.getReader();
       if (!reader) {
         throw new Error("Failed to read response stream.");
       }
-  
+
       const decoder = new TextDecoder();
       let done = false;
       let receivedText = "";
-  
+
       while (!done) {
         const { value, done: streamDone } = await reader.read();
         done = streamDone;
-  
+
         if (value) {
           receivedText += decoder.decode(value, { stream: true });
-  
+
           // Process each line of the SSE message
           const messages = receivedText.split("\n\n"); // Split by SSE message format
           for (const message of messages) {
             if (message.startsWith("data:")) {
               const data = message.slice(5).trim();
-  
+
               // Handle error messages
               if (data.startsWith("error:")) {
                 const errorMessage = data.slice(6).trim();
@@ -102,13 +100,13 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
                 setIsLoading(false);
                 return;
               }
-  
+
               // Update progress
               const progress = parseInt(data, 10);
               if (!isNaN(progress)) {
                 setProgress(progress);
               }
-  
+
               // If progress reaches 100, finish loading
               if (progress === 100) {
                 toast({
@@ -119,7 +117,7 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
               }
             }
           }
-  
+
           // Remove processed messages
           receivedText = "";
         }
@@ -134,25 +132,32 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
       setIsLoading(false);
     }
   };
-  
 
   return (
-    <form className="space-y-3 mb-10" onSubmit={handleSubmit} >
+    <form className="space-y-3 mb-10" onSubmit={handleSubmit}>
       <h1 className="text-2xl font-bold mb-2">Upload {types} file</h1>
-      <Label htmlFor="file_upload">
-        Upload an {types} file
-      </Label>
-      <div 
+      <Label htmlFor="file_upload">Upload an {types} file</Label>
+      <div
         className={`${className} size-64 hover:cursor-pointer rounded-xl shadow-lg shadow-gray-300`}
-        onClick={handleElementClick}>
-        {preview ? 
-            types == "image" ? 
-                <Image src={preview} alt="Preview" width={200} height={200} className="rounded-xl" /> 
-                :
-                <p className="break-all p-4 text-center text-lg font-semibold text-cyan-800">{preview}</p>
-            :
-            children
-        }
+        onClick={handleElementClick}
+      >
+        {preview ? (
+          types == "image" ? (
+            <Image
+              src={preview}
+              alt="Preview"
+              width={200}
+              height={200}
+              className="rounded-xl"
+            />
+          ) : (
+            <p className="break-all p-4 text-center text-lg font-semibold text-cyan-800">
+              {preview}
+            </p>
+          )
+        ) : (
+          children
+        )}
       </div>
       <Input
         type="file"
@@ -164,11 +169,7 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
       <Button type="submit" disabled={!file || isLoading} className="w-full">
         Submit
       </Button>
-      {
-        isLoading && (
-          <Progress value={progress} />
-        )
-      }
+      {isLoading && <Progress value={progress} />}
     </form>
   );
 };

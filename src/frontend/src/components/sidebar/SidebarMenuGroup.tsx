@@ -42,9 +42,7 @@ export const SidebarMenuGroup = () => {
   const pathname = usePathname();
   return (
     <SidebarGroup className="font-bold px-[10%] gap-2">
-      <SidebarGroupLabel className="text-md">
-        Menu
-      </SidebarGroupLabel>
+      <SidebarGroupLabel className="text-md">Menu</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu className="space-y-1">
           {navLinks.map((route, index) => (
@@ -61,7 +59,7 @@ export const SidebarMenuGroup = () => {
                   <route.icon className="scale-125" />
                   <span className="text-md">{route.name}</span>
                 </Link>
-              </SidebarMenuButton> 
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

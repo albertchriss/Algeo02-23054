@@ -37,7 +37,9 @@ export const SongCard = ({ imgSrc, title, number, score }: SongCardProps) => {
       </div>
       {score && (
         <div className="col-span-2 flex items-center justify-end">
-          <p className="text-center text-gray-500">Similarity: {(score*100).toFixed(2)}%</p>
+          <p className="text-center text-gray-500">
+            Similarity: {(score * 100).toFixed(2)}%
+          </p>
         </div>
       )}
     </div>

@@ -83,10 +83,9 @@ export const AlbumView = ({ name }: AlbumViewProps) => {
       {songs.map((song, index) => (
         <SongCard
           key={index}
-          number={(Number(page)-1)*limit+index+1}
+          number={(Number(page) - 1) * limit + index + 1}
           imgSrc={song.imgSrc}
           title={song.title}
-          duration={"3:00"}
         />
       ))}
       <PaginationControl currentUrl={`/album/${name}?`} totalPage={totalPage} />

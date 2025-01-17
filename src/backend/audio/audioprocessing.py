@@ -9,12 +9,11 @@ def group_notes_by_beat(midi_data):
     beats = midi_data.get_beats()
     # Prepare a dictionary to hold beats and their notes
     beat_notes = {i: [] for i in range(len(beats))}
-    # count = 0
+    
     # Iterate over instruments and notes
     for instrument in midi_data.instruments:
         if not instrument.is_drum:
             for note in instrument.notes:
-                # count += 1
                 # Find the beat index for the note's start time
                 beat_index_first = np.searchsorted(beats, note.start) - 1
                 beat_index_last = np.searchsorted(beats, note.end) - 1
@@ -32,13 +31,6 @@ def group_beat_by_window(midi_data):
     list_window = []
     window_notes = []
     # Create windows
-    # for start in range(0, len_beats - window_size + 1, step):
-    #     end = start + window_size
-    #     window_notes = []
-    #     for i in range(start, end):
-    #         if i in beat_notes:
-    #             window_notes.extend(beat_notes[i])
-    #     list_window.append(window_notes)
 
     # Populate the initial window
     for i in range(window_size):
@@ -107,9 +99,6 @@ def sliding_similarity(windows_a, windows_b):
 
 start = time.time()
 def preprocess_database(dataset_path):
-    # print(os.listdir(dataset_path))
-    # List all folders inside dataset_path
-    # all_folders = [f for f in os.listdir(dataset_path) if os.path.isdir(os.path.join(dataset_path, f))]
     # # Collect MIDI files from the selected folders
     midi_files = []
 
@@ -128,8 +117,7 @@ def preprocess_database(dataset_path):
         try:
             midi_data = PrettyMIDI(midi_file)
             # Process MIDI data
-        except (OSError,ValueError,EOFError,KeyError,TypeError,AttributeError,UnicodeDecodeError,IndexError,mido.midifiles.meta.KeySignatureError) as e:
-            # print(f"Error processing {midi_file}: {e}")
+        except:
             continue
 
         midi_window = group_beat_by_window(midi_data)
@@ -177,18 +165,9 @@ def process_query(query_path, database):
         final_res.sort(key=lambda x: x["score"], reverse=True)
         return final_res
     
-    except (OSError,ValueError,EOFError,KeyError,TypeError,AttributeError,UnicodeDecodeError,IndexError,mido.midifiles.meta.KeySignatureError) as e:
-        # print(f"Error processing {midi_file}: {e}")
+    except:
         return []
     
     
-# # HOW TO RUN
-# # Path ke direktori dataset
-# dataset_path = "midi_dataset2"
-# database = preprocess_database(dataset_path)
-
-# query_path = "midi_dataset2/Backstreet_Boys/I_Want_It_That_Way.mid"
-# similar_song = process_query(query_path, database)
-# # print(similar_song)
 
 

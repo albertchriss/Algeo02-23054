@@ -1,8 +1,6 @@
-// import { MidiPlayerComponent } from "@/components/MidiPlayer";
 import { QueryCard } from "@/components/search/QueryCard";
 import { MdOutlineImageSearch } from "react-icons/md";
 import { TbMusicSearch } from "react-icons/tb";
-
 
 export const Query = () => {
   return (
@@ -21,9 +19,6 @@ export const Query = () => {
           <TbMusicSearch size={100} />
         </QueryCard>
       </div>
-      {/* <MidiPlayerComponent
-        midiUrl="http://localhost:8000/uploads/dataset/All_I_Want_for_Christmas_Is_You.mid"
-      /> */}
     </div>
   );
 };

@@ -6,8 +6,7 @@ interface MidiPlayerComponentProps {
   midiUrl: string;
 }
 
-export const MidiPlayerComponent = ({midiUrl}: MidiPlayerComponentProps) => {
-
+export const MidiPlayerComponent = ({ midiUrl }: MidiPlayerComponentProps) => {
   return (
     <div className="midi-player-wrapper bg-cyan-tua/20 rounded-md p-1">
       <MidiPlayer

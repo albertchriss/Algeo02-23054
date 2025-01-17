@@ -106,7 +106,8 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 
                 with open(query_file_path, "w", encoding="utf-8") as query_file:
                     for res in result[:limit]:
-                        query_file.write(f"{res['filename']} {res['score']}\n")
+                        file_name_only = Path(res['filename']).name
+                        query_file.write(f"{file_name_only} {res['score']}\n")
                     query_file.write(str(time_taken) + "\n")
                 
                 yield "data: 100\n\n"
@@ -149,16 +150,16 @@ async def get_query_result(is_image: bool = Query(0)):
 
     if (is_image):
         result = [ {
-                    "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name[file_name.rfind('\\')+1:].strip().split()[0]}", 
-                    "title": file_name[file_name.rfind('\\')+1:].strip().split()[0],
-                    "score": file_name[file_name.rfind('\\')+1:].strip().split()[1]
+                    "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name.strip().split()[0]}", 
+                    "title": file_name.strip().split()[0],
+                    "score": file_name.strip().split()[1]
                 } for file_name in query_files[:-1]]
     else:
         mapper = await read_mapper()
         mapper = mapper["mappers"]
         result = [ {
-                    "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name[file_name.rfind('\\')+1:].strip().split()[0]][0]}", 
-                    "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name[file_name.rfind('\\')+1:].strip().split()[0]}",
+                    "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name.strip().split()[0]][0]}", 
+                    "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name.strip().split()[0]}",
                     "title": Path(file_name.strip().split()[0]).stem,
                     "score": file_name.strip().split()[1]
                 } for file_name in query_files[:-1]]

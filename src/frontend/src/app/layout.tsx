@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
-import { Poppins } from 'next/font/google';
-import { Toaster } from "@/components/ui/toaster"
+import { Poppins } from "next/font/google";
+import { Toaster } from "@/components/ui/toaster";
 
 const poppins = Poppins({
-  subsets: ['latin'], // Use subsets appropriate for your language support
-  weight: ['400', '700'], // Add weights you need (e.g., 400 for regular, 700 for bold)
+  subsets: ["latin"], // Use subsets appropriate for your language support
+  weight: ["400", "700"], // Add weights you need (e.g., 400 for regular, 700 for bold)
 });
 
 export const metadata: Metadata = {

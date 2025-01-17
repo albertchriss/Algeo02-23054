@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 type extendedAlbum = Album & {
   score: string;
-}
+};
 
 export const ImageResult = () => {
   // const limit = 12;
@@ -73,7 +73,9 @@ export const ImageResult = () => {
 
   return (
     <>
-      <h1 className='text-3xl'>Images found in {timeTaken.toFixed(2)} seconds.</h1>
+      <h1 className="text-3xl">
+        Images found in {timeTaken.toFixed(2)} seconds.
+      </h1>
       <div className="w-full grid grid-cols-4 gap-y-8">
         {resultImages.length === 0 ? (
           <div className="h-[200px] col-span-3 flex justify-center items-center">
@@ -85,7 +87,11 @@ export const ImageResult = () => {
               key={index}
               onClick={() => router.push(`/album/${album.title}`)}
             >
-              <AlbumWrapper imgSrc={album.imgSrc} title={album.title} score={Number(album.score)} />
+              <AlbumWrapper
+                imgSrc={album.imgSrc}
+                title={album.title}
+                score={Number(album.score)}
+              />
             </div>
           ))
         )}

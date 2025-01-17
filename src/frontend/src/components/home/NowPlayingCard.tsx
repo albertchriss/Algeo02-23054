@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { MidiPlayerComponent } from "../MidiPlayer";
+import { Skeleton } from "../ui/skeleton";
 
 interface NowPlayingCardProps {
   midiUrl: string;
@@ -51,12 +52,14 @@ export const NowPlayingCard = ({ midiUrl }: NowPlayingCardProps) => {
 
   if (isLoading) {
     return (
-      <div className="w-full h-auto aspect-[15/16] bg-white shadow-md rounded-xl flex flex-col items-center py-8 space-y-8">
-        <div className="w-20 h-20 bg-gray-200 rounded-full animate-pulse"></div>
-        <div className="w-40 h-6 bg-gray-200 rounded-md animate-pulse"></div>
-        <div className="w-40 h-6 bg-gray-200 rounded-md animate-pulse"></div>
-        <div className="w-40 h-6 bg-gray-200 rounded-md animate-pulse"></div>
+      <div className="w-[400px] h-auto aspect-[15/16] bg-white shadow-md rounded-xl flex flex-col items-center py-8 space-y-8">
+        <Skeleton className="rounded-full object-cover size-[300px] shadow-2xl shadow-black/30"/>
+      <div className="w-[80%] h-[32px]">
+        <Skeleton className="rounded-lg h-full w-full"/>
+
       </div>
+      <Skeleton className="rounded-lg h-12 w-[70%] my-2" />
+    </div>
     );
   }
 
@@ -69,10 +72,8 @@ export const NowPlayingCard = ({ midiUrl }: NowPlayingCardProps) => {
         height={1000}
         className="rounded-full object-cover size-[300px] shadow-2xl shadow-black/30"
       />
-      <div className="w-[80%]">
-        <h2 className="text-2xl font-bold truncate">
-          {title}
-        </h2>
+      <div className="w-[80%] flex items-center justify-center">
+        <h2 className="text-2xl font-bold truncate text-center">{title}</h2>
       </div>
       {audioSrc && <MidiPlayerComponent midiUrl={audioSrc} />}
     </div>

@@ -56,16 +56,9 @@ def center_data(data, query):
     Returns:
         numpy array: Centered data matrix.
     """
-    now = time.time()
     mean_vector = np.mean(data, axis=0, keepdims=True)
-    print(len(data))
-    print("chris tes mean: ", time.time()-now)
-    now = time.time()
     centered_data = data - mean_vector
-    print("chris tes center: ", time.time()-now)
-    now = time.time()
     centered_query = query - mean_vector
-    print("chris tes center query: ", time.time()-now)
     return centered_data , centered_query
 
 
@@ -131,26 +124,16 @@ def preProcessingDataSet(data_image_dir: str, target_size=100, batch_size=4):
         dataMean (numpy array): 1D array of integer of average features in number
     """
 
-    print("Starting image dataset processing...")
-    startTime = time.time()
     #database picture to matrix---------------------------------------------------------------------------------------------------------------------
     image_paths = get_image_paths(data_image_dir)
     dataPicture = process_images_in_batches(image_paths, target_size, batch_size)
-    t1 = time.time()
-    print(f"imgDataBase to matrix: {t1-startTime}")
     #centering dataPicture---------------------------------------------------------------------------------------------------------------------
     dataMean = find_means(dataPicture)
-    t2 = time.time()
-    print(f"data centering: {t2-t1}")
     #find eigenvectors---------------------------------------------------------------------------------------------------------------------
     dataPicture_centered = center_data_with_mean(dataPicture, dataMean)
     eigenvectors = compute_pca_svd(dataPicture_centered.T, 20)
-    t3= time.time()
-    print(f"principal component(PCA): {t3-t2}")
     # Project dataPicture---------------------------------------------------------------------------------------------------------------------
     projected_data = project_data(dataPicture_centered, eigenvectors)
-    t4 = time.time()
-    print(f"dataBase projection: {t4-t3}")
 
     return image_paths, projected_data, eigenvectors, dataMean
     
@@ -168,39 +151,26 @@ def queryImage(query_paths: list, cache_path: str, target_size=100, batch_size=4
     # Load the processed data using joblib
     image_paths, projected_data, eigenvectors, dataMean = joblib.load(path)
 
-    print("Starting image processing...")
-    startTime = time.time()
     yield 10
     #query to matrix---------------------------------------------------------------------------------------------------------------------
     queryPicture = process_images_in_batches(query_paths, target_size, batch_size)
-    t1 = time.time()
-    print(f"imgQuery to matrix: {t1-startTime}")
     yield 20
     #centering dataPicture---------------------------------------------------------------------------------------------------------------------
     queryPicture_centered = center_data_with_mean(queryPicture, dataMean)
-    t2 = time.time()
-    print(f"data centering: {t2-t1}")
     yield 30
     # Project queryPicture---------------------------------------------------------------------------------------------------------------------
     projected_query = project_data(queryPicture_centered, eigenvectors)
-    t3 = time.time()
-    print(f"query projection: {t3-t2}")
     yield 40
     
     sorted_imgPaths = compute_similarity(projected_data, projected_query)
     yield 60
     
-    t4 = time.time()
-    print(f"compute similarity: {t4-t3}")
     sorted_similarities = sorted(
         zip(sorted_imgPaths, image_paths), key=lambda x: x[0], reverse=True
     )
-    t5 = time.time()
-    print(f"sortZip: {t5-t4}")
     yield 80
     sorted_by_percentage_images = []
     for similarity, img_path in sorted_similarities[:12]:
-        print(f"Image: {img_path}, Similarity: {similarity:.2f}%")
         if similarity > 75:
             sorted_by_percentage_images.append({"filename": img_path, "score": similarity})
     yield 100

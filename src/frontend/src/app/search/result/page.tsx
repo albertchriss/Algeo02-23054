@@ -4,9 +4,9 @@ import React from "react";
 const QueryResultPage = () => {
   return (
     <div className="w-full p-10 flex flex-col space-y-8">
-        <QueryResult />
+      <QueryResult />
     </div>
-  )
+  );
 };
 
 export default QueryResultPage;

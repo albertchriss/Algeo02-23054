@@ -23,9 +23,7 @@ export const SidebarUploadGroup = () => {
   const pathname = usePathname();
   return (
     <SidebarGroup className="font-bold px-[10%] gap-2">
-      <SidebarGroupLabel className="text-md">
-        Upload data
-      </SidebarGroupLabel>
+      <SidebarGroupLabel className="text-md">Upload data</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu className="space-y-1">
           {navLinks.map((route, index) => (

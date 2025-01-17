@@ -13,7 +13,7 @@ export const AlbumList = () => {
   if (Number(page) < 1) {
     page = "1";
   }
-  
+
   const q = searchParams.get("q") ?? "";
   const limit = 12;
 

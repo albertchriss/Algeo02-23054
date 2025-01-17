@@ -25,11 +25,10 @@ export const PaginationControl = ({
 
   if (Number(page) > totalPage) {
     page = totalPage.toString();
-  }
-  else if (Number(page) < 1) {
+  } else if (Number(page) < 1) {
     page = "1";
   }
-  
+
   const search = searchParams.get("q") ?? "";
   const q = search.length > 0 ? `&q=${search}` : "";
 

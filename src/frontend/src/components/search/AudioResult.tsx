@@ -7,7 +7,7 @@ import { SongCard } from "../SongCard";
 
 type extendedSong = Song & {
   score: string;
-}
+};
 
 export const AudioResult = () => {
   const { toast } = useToast();

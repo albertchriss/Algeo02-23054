@@ -63,7 +63,7 @@ export const SongList = () => {
     fetchAudios();
   }, [page, q]);
 
-  if (isLoading){
+  if (isLoading) {
     return (
       <div className="w-full space-y-4">
         <div className="flex flex-col w-full gap-3">
@@ -72,30 +72,27 @@ export const SongList = () => {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="w-full space-y-4">
       <div className="flex flex-col w-full gap-3">
-        {
-          uploadedAudios.length === 0 ?
+        {uploadedAudios.length === 0 ? (
           <div className="h-64 w-full flex items-center justify-center">
             <p className="italic text-gray-500">No songs.</p>
           </div>
-          :
+        ) : (
           uploadedAudios.map((song, index) => (
             <SongCard
               key={index}
               imgSrc={song.imgSrc}
               title={song.title}
-              duration={"3:00"}
-              number={(Number(page)-1)*limit+index+1}
-              audioSrc={song.audioSrc}
+              number={(Number(page) - 1) * limit + index + 1}
             />
           ))
-        }
-        <PaginationControl currentUrl="/song?" totalPage={totalPage}/>
+        )}
+        <PaginationControl currentUrl="/song?" totalPage={totalPage} />
       </div>
     </div>
   );

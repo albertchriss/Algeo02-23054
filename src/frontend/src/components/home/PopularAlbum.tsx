@@ -7,8 +7,7 @@ import { AlbumSkeleton } from "./AlbumSkeleton";
 export type Album = {
   imgSrc: string;
   title: string;
-}
-
+};
 
 export const PopularAlbum = () => {
   const { toast } = useToast();
@@ -26,8 +25,7 @@ export const PopularAlbum = () => {
         if (response.ok) {
           const data = await response.json();
           setUploadedImages(data.images || []);
-        } 
-        else {
+        } else {
           const errorData = await response.json();
           toast({
             title: "Failed to fetch images",
@@ -71,11 +69,7 @@ export const PopularAlbum = () => {
           </div>
         ) : (
           uploadedImages.map((album, index) => (
-            <AlbumCard
-              key={index}
-              imgSrc={album.imgSrc}
-              title={album.title}
-            />
+            <AlbumCard key={index} imgSrc={album.imgSrc} title={album.title} />
           ))
         )}
       </div>
