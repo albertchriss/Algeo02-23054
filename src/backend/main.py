@@ -207,29 +207,34 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
             nonlocal progress
             yield "data: 10\n\n"
             # extract zip file
-            with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_ref:
-                increment = 70 / len(zip_ref.infolist())
-                for file_info in zip_ref.infolist():
-                    # Skip directories
-                    if file_info.is_dir():
-                        continue
-
-                    file_name = file_info.filename
-                    # check jika file adalah file gambar atau file audio
-                    if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
-                        extracted_file_path = DATASET_DIR / Path(file_name.replace(" ", "_")).name
-                        try:
-                            with open(extracted_file_path, "wb") as extracted_file:
-                                extracted_file.write(zip_ref.read(file_name))
-                        except:
+            try:
+                with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_ref:
+                    increment = 70 / len(zip_ref.infolist())
+                    for file_info in zip_ref.infolist():
+                        # Skip directories
+                        if file_info.is_dir():
                             continue
-                    
-                    # file bukan file gambar atau file audio
-                    else:
-                        continue
-                    progress += increment
-                    yield f"data: {progress}\n\n"
-        
+
+                        file_name = file_info.filename
+                        # check jika file adalah file gambar atau file audio
+                        if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
+                            extracted_file_path = DATASET_DIR / Path(file_name.replace(" ", "_")).name
+                            try:
+                                with open(extracted_file_path, "wb") as extracted_file:
+                                    extracted_file.write(zip_ref.read(file_name))
+                            except:
+                                continue
+                        
+                        # file bukan file gambar atau file audio
+                        else:
+                            continue
+                        progress += increment
+                        yield f"data: {progress}\n\n"
+
+            except zipfile.BadZipFile:
+                yield "data: error:Invalid zip file\n\n"
+                return
+
             if (is_image):
                 image_paths, projected_data, eigenvectors, dataMean = preProcessingDataSet(DATASET_DIR)
                 # Save the processed data using joblib

@@ -92,7 +92,6 @@ export const DatasetUpload = ({
 
       if (types === "mapper") {
         if (response.ok) {
-          console.log("File uploaded successfully");
           toast({
             title: "File uploaded successfully",
             variant: "default",
@@ -171,12 +170,12 @@ export const DatasetUpload = ({
 
   return (
     <form className="space-y-3 mb-10" onSubmit={handleSubmit}>
-      <h1 className="text-2xl font-bold mb-2">Upload {types} file</h1>
+      <h1 className="text-2xl font-bold mb-2">Upload {types === "audio" ? "midi" : types} {types === "mapper" ? "file" : "dataset"}</h1>
       <Label htmlFor="file_upload">
         Upload a {types === "mapper" ? "txt" : "zip"} file
       </Label>
       <div
-        className={`${className} size-64 hover:cursor-pointer rounded-xl shadow-lg shadow-gray-300 `}
+        className={`${className} size-[300px] hover:cursor-pointer rounded-xl shadow-lg shadow-gray-300 `}
         onClick={handleElementClick}
       >
         {file ? (
@@ -202,7 +201,7 @@ export const DatasetUpload = ({
         Submit
       </Button>
       {types === "mapper" && (
-        <Button className="ml-4" disabled={isLoading} onClick={handleOnClick}>
+        <Button className="ml-4 px-9" disabled={isLoading} onClick={handleOnClick}>
           Generate mapper
         </Button>
       )}

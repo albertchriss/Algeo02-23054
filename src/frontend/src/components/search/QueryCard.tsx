@@ -138,7 +138,7 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
       <h1 className="text-2xl font-bold mb-2">Upload {types} file</h1>
       <Label htmlFor="file_upload">Upload an {types} file</Label>
       <div
-        className={`${className} size-64 hover:cursor-pointer rounded-xl shadow-lg shadow-gray-300`}
+        className={`${className} size-[350px] hover:cursor-pointer rounded-xl shadow-lg shadow-gray-300`}
         onClick={handleElementClick}
       >
         {preview ? (
@@ -146,12 +146,12 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
             <Image
               src={preview}
               alt="Preview"
-              width={200}
-              height={200}
+              width={300}
+              height={300}
               className="rounded-xl"
             />
           ) : (
-            <p className="break-all p-4 text-center text-lg font-semibold text-cyan-800">
+            <p className="break-all p-4 text-center text-2xl font-semibold text-cyan-800">
               {preview}
             </p>
           )
