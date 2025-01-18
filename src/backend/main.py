@@ -206,6 +206,7 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
         async def processing_with_progress():
             nonlocal progress
             yield "data: 10\n\n"
+            exist = False
             # extract zip file
             try:
                 with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_ref:
@@ -218,6 +219,7 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
                         file_name = file_info.filename
                         # check jika file adalah file gambar atau file audio
                         if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
+                            exist = True
                             extracted_file_path = DATASET_DIR / Path(file_name.replace(" ", "_")).name
                             try:
                                 with open(extracted_file_path, "wb") as extracted_file:
@@ -228,8 +230,16 @@ async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(..
                         # file bukan file gambar atau file audio
                         else:
                             continue
+
                         progress += increment
                         yield f"data: {progress}\n\n"
+
+                if not exist:
+                    if is_image:
+                        yield "data: error:No image found\n\n"
+                    else:
+                        yield "data: error:No midi found\n\n"
+                    return
 
             except zipfile.BadZipFile:
                 yield "data: error:Invalid zip file\n\n"
@@ -384,3 +394,9 @@ async def get_song(name: str = Query("")):
         "title": Path(name).stem
     }
     return {"song": song}
+
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

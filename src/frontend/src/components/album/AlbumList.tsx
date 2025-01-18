@@ -79,7 +79,7 @@ export const AlbumList = () => {
     <>
       <div className="w-full grid grid-cols-4 gap-y-8">
         {uploadedImages.length === 0 ? (
-          <div className="h-[200px] col-span-3 flex justify-center items-center">
+          <div className="h-[200px] col-span-4 flex justify-center items-center ">
             <p className="text-gray-400 italic">No Albums yet.</p>
           </div>
         ) : (

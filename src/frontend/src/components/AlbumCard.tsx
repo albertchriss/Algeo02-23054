@@ -4,11 +4,12 @@ interface AlbumCardProps {
   imgSrc: string;
   title: string;
   className?: string;
+  divClassName?: string;
 }
 
-export const AlbumCard = ({ imgSrc, title, className }: AlbumCardProps) => {
+export const AlbumCard = ({ imgSrc, title, className, divClassName }: AlbumCardProps) => {
   return (
-    <div className="flex flex-col flex-shrink-0 gap-4 overflow-hidden max-w-[200px] ">
+    <div className={`flex flex-col flex-shrink-0 gap-4 overflow-hidden max-w-[200px] ${divClassName}`}>
       <Image
         src={imgSrc}
         alt={title}
