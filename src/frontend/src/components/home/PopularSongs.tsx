@@ -21,7 +21,7 @@ export const PopularSongs = () => {
       try {
         setIsLoading(true);
         const endPoint =
-          "http://localhost:8000/dataset/?is_image=false&page=1&limit=4";
+          `${process.env.BACKEND_URL}/dataset/?is_image=false&page=1&limit=4`;
         const response = await fetch(endPoint, {
           method: "GET",
         });

@@ -20,7 +20,7 @@ export const NowPlayingCard = ({ midiUrl }: NowPlayingCardProps) => {
     async function getSong() {
       try {
         setIsLoading(true);
-        const endPoint = `http://localhost:8000/song/?name=${midiUrl}`;
+        const endPoint = `${process.env.BACKEND_URL}/song/?name=${midiUrl}`;
         const response = await fetch(endPoint, {
           method: "GET",
         });

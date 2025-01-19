@@ -36,7 +36,7 @@ export const DatasetUpload = ({
   const handleOnClick = async () => {
     try {
       setIsLoading(true);
-      const endPoint = "http://localhost:8000/mapper/generate/";
+      const endPoint = `${process.env.BACKEND_URL}/mapper/generate/`;
       const response = await fetch(endPoint, {
         method: "POST",
       });
@@ -81,9 +81,9 @@ export const DatasetUpload = ({
       setIsLoading(true);
       let endPoint;
       if (types === "mapper") {
-        endPoint = "http://localhost:8000/uploadmapper/";
+        endPoint = `${process.env.BACKEND_URL}/uploadmapper/`;
       } else {
-        endPoint = "http://localhost:8000/uploaddataset/";
+        endPoint = `${process.env.BACKEND_URL}/uploaddataset/`;
       }
       const response = await fetch(endPoint, {
         method: "POST",

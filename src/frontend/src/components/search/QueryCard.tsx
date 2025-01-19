@@ -60,7 +60,7 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
       setIsLoading(true);
       setProgress(0); // Initialize progress state
 
-      const endPoint = "http://localhost:8000/uploadquery/";
+      const endPoint = `${process.env.BACKEND_URL}/uploadquery/`;
       const response = await fetch(endPoint, {
         method: "POST",
         body: formData,

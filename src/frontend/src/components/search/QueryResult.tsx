@@ -11,7 +11,7 @@ export const QueryResult = () => {
   useEffect(() => {
     const fetchType = async () => {
       try {
-        const endPoint = `http://localhost:8000/query/type/`;
+        const endPoint = `${process.env.BACKEND_URL}/query/type/`;
         const response = await fetch(endPoint, {
           method: "GET",
         });

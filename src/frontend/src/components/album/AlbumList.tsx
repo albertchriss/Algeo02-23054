@@ -27,7 +27,7 @@ export const AlbumList = () => {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
-        const endPoint = `http://localhost:8000/dataset/?is_image=true&limit=${limit}&page=${page}&search=${q}`;
+        const endPoint = `${process.env.BACKEND_URL}/dataset/?is_image=true&limit=${limit}&page=${page}&search=${q}`;
         const response = await fetch(endPoint, {
           method: "GET",
         });
