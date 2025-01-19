@@ -28,7 +28,7 @@ export const AlbumView = ({ name }: AlbumViewProps) => {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${process.env.BACKEND_URL}/dataset/${name}/?page=${page}&limit=${limit}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/dataset/${name}/?page=${page}&limit=${limit}`
         );
         if (response.ok) {
           const data = await response.json();

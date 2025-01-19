@@ -12,11 +12,8 @@ export const SongSkeleton = () => {
       <div className="col-span-8 flex items-center">
         <Skeleton className="h-[16px] w-40" />
       </div>
-      <div className="col-span-1 flex items-center justify-end">
+      <div className="col-span-2 flex items-center justify-end">
         <Skeleton className="h-[16px] w-20" />
-      </div>
-      <div className="col-span-1 flex items-center justify-end">
-        <Skeleton className="size-10" />
       </div>
     </div>
   );

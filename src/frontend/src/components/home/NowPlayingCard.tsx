@@ -20,7 +20,7 @@ export const NowPlayingCard = ({ midiUrl }: NowPlayingCardProps) => {
     async function getSong() {
       try {
         setIsLoading(true);
-        const endPoint = `${process.env.BACKEND_URL}/song/?name=${midiUrl}`;
+        const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/song/?name=${midiUrl}`;
         const response = await fetch(endPoint, {
           method: "GET",
         });
@@ -53,13 +53,12 @@ export const NowPlayingCard = ({ midiUrl }: NowPlayingCardProps) => {
   if (isLoading) {
     return (
       <div className="w-[400px] h-auto aspect-[15/16] bg-white shadow-md rounded-xl flex flex-col items-center py-8 space-y-8">
-        <Skeleton className="rounded-full object-cover size-[300px] shadow-2xl shadow-black/30"/>
-      <div className="w-[80%] h-[32px]">
-        <Skeleton className="rounded-lg h-full w-full"/>
-
+        <Skeleton className="rounded-full object-cover size-[300px] shadow-2xl shadow-black/30" />
+        <div className="w-[80%] h-[32px]">
+          <Skeleton className="rounded-lg h-full w-full" />
+        </div>
+        <Skeleton className="rounded-lg h-12 w-[70%] my-2" />
       </div>
-      <Skeleton className="rounded-lg h-12 w-[70%] my-2" />
-    </div>
     );
   }
 

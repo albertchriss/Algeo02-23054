@@ -19,7 +19,7 @@ export const AudioResult = () => {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
-        const endPoint = `${process.env.BACKEND_URL}/query/?is_image=false`;
+        const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query/?is_image=false`;
         const response = await fetch(endPoint, {
           method: "GET",
         });

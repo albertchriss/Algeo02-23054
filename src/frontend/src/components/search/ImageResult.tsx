@@ -23,7 +23,7 @@ export const ImageResult = () => {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
-        const endPoint = `${process.env.BACKEND_URL}/query/?is_image=true`;
+        const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query/?is_image=true`;
         const response = await fetch(endPoint, {
           method: "GET",
         });

@@ -3,8 +3,8 @@ import Image from "next/image";
 import React from "react";
 
 const Album = async ({ params }: { params: Promise<{ name: string }> }) => {
-  const name = (await params).name
-  const imageUrl = `${process.env.BACKEND_URL}/uploads/dataset/${name}`;
+  const name = (await params).name;
+  const imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/dataset/${name}`;
   return (
     <div className="w-full flex-col items-center">
       <div className="w-full flex flex-col items-center relative space-y-4">

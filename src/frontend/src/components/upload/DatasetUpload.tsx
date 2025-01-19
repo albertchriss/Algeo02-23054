@@ -36,7 +36,7 @@ export const DatasetUpload = ({
   const handleOnClick = async () => {
     try {
       setIsLoading(true);
-      const endPoint = `${process.env.BACKEND_URL}/mapper/generate/`;
+      const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/mapper/generate/`;
       const response = await fetch(endPoint, {
         method: "POST",
       });
@@ -81,9 +81,9 @@ export const DatasetUpload = ({
       setIsLoading(true);
       let endPoint;
       if (types === "mapper") {
-        endPoint = `${process.env.BACKEND_URL}/uploadmapper/`;
+        endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploadmapper/`;
       } else {
-        endPoint = `${process.env.BACKEND_URL}/uploaddataset/`;
+        endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploaddataset/`;
       }
       const response = await fetch(endPoint, {
         method: "POST",
@@ -170,7 +170,10 @@ export const DatasetUpload = ({
 
   return (
     <form className="space-y-3 mb-10" onSubmit={handleSubmit}>
-      <h1 className="text-2xl font-bold mb-2">Upload {types === "audio" ? "midi" : types} {types === "mapper" ? "file" : "dataset"}</h1>
+      <h1 className="text-2xl font-bold mb-2">
+        Upload {types === "audio" ? "midi" : types}{" "}
+        {types === "mapper" ? "file" : "dataset"}
+      </h1>
       <Label htmlFor="file_upload">
         Upload a {types === "mapper" ? "txt" : "zip"} file
       </Label>
@@ -201,7 +204,11 @@ export const DatasetUpload = ({
         Submit
       </Button>
       {types === "mapper" && (
-        <Button className="ml-4 px-9" disabled={isLoading} onClick={handleOnClick}>
+        <Button
+          className="ml-4 px-9"
+          disabled={isLoading}
+          onClick={handleOnClick}
+        >
           Generate mapper
         </Button>
       )}

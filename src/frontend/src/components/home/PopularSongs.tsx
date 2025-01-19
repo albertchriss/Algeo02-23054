@@ -20,8 +20,7 @@ export const PopularSongs = () => {
     const fetchAudios = async () => {
       try {
         setIsLoading(true);
-        const endPoint =
-          `${process.env.BACKEND_URL}/dataset/?is_image=false&page=1&limit=4`;
+        const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/dataset/?is_image=false&page=1&limit=4`;
         const response = await fetch(endPoint, {
           method: "GET",
         });
@@ -80,7 +79,10 @@ export const PopularSongs = () => {
             />
           ))
         )}
-        <Link className="w-full py-3 px-6 text-biru-teks bg-white shadow-xl shadow-gray-200/50 hover:scale-105 hover:bg-cyan-tua/10 transition-all duration-300 hover:cursor-pointer flex justify-center items-center" href="/song">
+        <Link
+          className="w-full py-3 px-6 text-biru-teks bg-white shadow-xl shadow-gray-200/50 hover:scale-105 hover:bg-cyan-tua/10 transition-all duration-300 hover:cursor-pointer flex justify-center items-center"
+          href="/song"
+        >
           See More...
         </Link>
       </div>
