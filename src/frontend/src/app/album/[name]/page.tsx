@@ -2,8 +2,8 @@ import { AlbumView } from "@/components/album/AlbumView";
 import Image from "next/image";
 import React from "react";
 
-const Album = ({ params }: { params: { name: string } }) => {
-  const { name } = params
+const Album = async ({ params }: { params: Promise<{ name: string }> }) => {
+  const name = (await params).name
   const imageUrl = `${process.env.BACKEND_URL}/uploads/dataset/${name}`;
   return (
     <div className="w-full flex-col items-center">
