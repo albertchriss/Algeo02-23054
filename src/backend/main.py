@@ -12,6 +12,10 @@ from image.image_processing import preProcessingDataSet, queryImage
 from audio.audioprocessing import process_query, preprocess_database
 import time
 import joblib
+from dotenv import load_dotenv
+
+load_dotenv()
+backend_url = os.getenv("BACKEND_URL")
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 MAPPER_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
@@ -32,7 +36,7 @@ app.mount("/uploads/query_result", StaticFiles(directory=query_result_directory)
 # CORS setup for communication with frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React/Next.js origin
+    allow_origins=["*"],  # React/Next.js origin
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -138,6 +142,7 @@ async def get_query_type():
 
 @app.get('/query/')
 async def get_query_result(is_image: bool = Query(0)):
+
     if (not os.listdir(QUERY_RESULT_DIR)):
         raise HTTPException(status_code=404, detail="No query found")
 
@@ -148,7 +153,7 @@ async def get_query_result(is_image: bool = Query(0)):
 
     if (is_image):
         result = [ {
-                    "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name.strip().split()[0]}", 
+                    "imgSrc": f"{backend_url}/uploads/dataset/{file_name.strip().split()[0]}", 
                     "title": file_name.strip().split()[0],
                     "score": file_name.strip().split()[1]
                 } for file_name in query_files[:-1]]
@@ -156,8 +161,8 @@ async def get_query_result(is_image: bool = Query(0)):
         mapper = await read_mapper()
         mapper = mapper["mappers"]
         result = [ {
-                    "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name.strip().split()[0]][0]}", 
-                    "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name.strip().split()[0]}",
+                    "imgSrc": f"{backend_url}/uploads/dataset/{mapper[file_name.strip().split()[0]][0]}", 
+                    "audioSrc": f"{backend_url}/uploads/dataset/{file_name.strip().split()[0]}",
                     "title": Path(file_name.strip().split()[0]).stem,
                     "score": file_name.strip().split()[1]
                 } for file_name in query_files[:-1]]
@@ -272,7 +277,7 @@ async def read_dataset(is_image: bool = Query(0), page: int = Query(1), limit: i
         image_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_image_file(file_name) and search.lower() in file_name.lower().replace(".jpg", "").replace(".jpeg", "").replace(".png", "")]
         images = [
             {
-                "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name}", 
+                "imgSrc": f"{backend_url}/uploads/dataset/{file_name}", 
                 "title": file_name
             }
             for file_name in image_data[start_index : min(end_index, len(image_data))]
@@ -289,8 +294,8 @@ async def read_dataset(is_image: bool = Query(0), page: int = Query(1), limit: i
         midi_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_midi_file(file_name) and search.lower() in file_name.lower().replace(".mid", "")]
         midis = [
             {
-            "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[file_name][0]}" if file_name in mapper else "/cover.jpg", 
-            "audioSrc": f"http://localhost:8000/uploads/dataset/{file_name}",
+            "imgSrc": f"{backend_url}/uploads/dataset/{mapper[file_name][0]}" if file_name in mapper else "/cover.jpg", 
+            "audioSrc": f"{backend_url}/uploads/dataset/{file_name}",
             "title": Path(file_name).stem  
             }
             for file_name in midi_data[start_index : min(end_index, len(midi_data))]
@@ -309,7 +314,7 @@ async def read_mapper():
     
     mapper: dict[int, list] = {}
 
-    mapper_file = "http://localhost:8000/uploads/mapper/mapper.txt"
+    mapper_file = "{backend_url}/uploads/mapper/mapper.txt"
     with open(MAPPER_DIR / Path(mapper_file).name, "rb") as file_object:
         contents = file_object.read()
         try:
@@ -353,8 +358,8 @@ async def read_file(file_name: str, page: int = Query(1), limit: int = Query(10)
     
     midis = [
         {
-            "imgSrc": f"http://localhost:8000/uploads/dataset/{file_name}", 
-            "audioSrc": f"http://localhost:8000/uploads/dataset/{midi_name}",
+            "imgSrc": f"{backend_url}/uploads/dataset/{file_name}", 
+            "audioSrc": f"{backend_url}/uploads/dataset/{midi_name}",
             "title": Path(midi_name).stem
         }
         for midi_name in mapper[file_name][start_index : min(end_index, len(mapper[file_name]))]
@@ -389,8 +394,8 @@ async def get_song(name: str = Query("")):
     if (name not in mapper):
         raise HTTPException(status_code=404, detail="Song not found")
     song = {
-        "imgSrc": f"http://localhost:8000/uploads/dataset/{mapper[name][0]}", 
-        "audioSrc": f"http://localhost:8000/uploads/dataset/{name}",
+        "imgSrc": f"{backend_url}/uploads/dataset/{mapper[name][0]}", 
+        "audioSrc": f"{backend_url}/uploads/dataset/{name}",
         "title": Path(name).stem
     }
     return {"song": song}
@@ -399,4 +404,4 @@ async def get_song(name: str = Query("")):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

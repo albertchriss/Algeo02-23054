@@ -4,7 +4,7 @@ import React from "react";
 
 const Album = async ({ params }: { params: { name: string } }) => {
   const { name } = await params
-  const imageUrl = `http://localhost:8000/uploads/dataset/${name}`;
+  const imageUrl = `${process.env.BACKEND_URL}/uploads/dataset/${name}`;
   return (
     <div className="w-full flex-col items-center">
       <div className="w-full flex flex-col items-center relative space-y-4">
