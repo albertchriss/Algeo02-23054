@@ -6,8 +6,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "localhost",
-        port: "8000", // Include port if necessary
-        pathname: "/uploads/dataset/**", // Match your dataset path
+        pathname: "/uploads/dataset/**", 
+      },
+      {
+        protocol: "https",
+        hostname: "algeo02-23054-production.up.railway.app",
+        pathname: "/uploads/dataset/**",
       },
     ],
   },
