@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 backend_url = os.getenv("BACKEND_URL")
+ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 DATASET_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 MAPPER_DIR.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
@@ -108,7 +109,6 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 
                 with open(query_file_path, "w", encoding="utf-8") as query_file:
                     for res in result[:limit]:
-                        print(res['filename'])
                         file_name_only = Path(res['filename']).name
                         query_file.write(f"{file_name_only} {res['score']}\n")
                     query_file.write(str(time_taken) + "\n")
@@ -177,6 +177,9 @@ async def get_query_result(is_image: bool = Query(0)):
 
 @app.post('/uploadmapper/')
 async def create_upload_mapper(file_upload: UploadFile):
+    if ENVIRONMENT == "production":
+        raise HTTPException(status_code=403, detail="Mapper upload is not available at the moment")
+    
     delete_mapper()
     try:
         contents = await file_upload.read()
@@ -203,6 +206,9 @@ async def create_upload_mapper(file_upload: UploadFile):
     
 @app.post('/uploaddataset/')
 async def create_upload_dataset(file_upload: UploadFile, is_image: str = Form(...)):
+    if ENVIRONMENT == "production":
+        raise HTTPException(status_code=403, detail="Dataset upload is not available at the moment")
+    
     is_image = is_image.lower() == "true"
     delete_dataset(is_image)
 
@@ -371,6 +377,8 @@ async def read_file(file_name: str, page: int = Query(1), limit: int = Query(10)
 
 @app.post("/mapper/generate/")
 async def generate_mapper():
+    if ENVIRONMENT == "production":
+        raise HTTPException(status_code=403, detail="Mapper generation is not available at the moment")
     delete_mapper()
     image_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_image_file(file_name)]
     midi_data = [file_name for file_name in os.listdir(DATASET_DIR) if is_midi_file(file_name)]

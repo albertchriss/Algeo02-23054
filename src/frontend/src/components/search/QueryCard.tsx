@@ -165,6 +165,7 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
         accept={`${types === "image" ? ".png, .jpg, .jpeg" : ".mid"}`}
         className="hidden"
         ref={fileInputRef}
+        disabled={isLoading}
       />
       <Button type="submit" disabled={!file || isLoading} className="w-full">
         Submit

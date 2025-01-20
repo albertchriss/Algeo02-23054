@@ -168,6 +168,8 @@ export const DatasetUpload = ({
     }
   };
 
+  const isOnProduction = process.env.NODE_ENV === "production";
+
   return (
     <form className="space-y-3 mb-10" onSubmit={handleSubmit}>
       <h1 className="text-2xl font-bold mb-2">
@@ -195,10 +197,11 @@ export const DatasetUpload = ({
         accept={`${types === "mapper" ? ".txt" : ".zip"}`}
         className="hidden"
         ref={fileInputRef}
+        disabled={isLoading || isOnProduction}
       />
       <Button
         type="submit"
-        disabled={!file || isLoading}
+        disabled={!file || isLoading || isOnProduction}
         className={`${types === "mapper" ? "" : "w-full"}`}
       >
         Submit
@@ -206,7 +209,7 @@ export const DatasetUpload = ({
       {types === "mapper" && (
         <Button
           className="ml-4 px-9"
-          disabled={isLoading}
+          disabled={isLoading || isOnProduction}
           onClick={handleOnClick}
         >
           Generate mapper
