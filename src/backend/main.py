@@ -68,6 +68,7 @@ async def set_cookie(response: Response, request: Request):
             path="/",
             httponly=True,
             secure=True,
+            samesite=None,
         )
     return session_id
 
