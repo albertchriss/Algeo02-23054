@@ -68,7 +68,7 @@ async def set_cookie(response: Response, request: Request):
             path="/",
             httponly=True,
             secure=True,
-            samesite=None,
+            samesite="None",
         )
     return session_id
 
@@ -370,7 +370,7 @@ async def read_mapper():
     return {"mappers": mapper}
 
 
-@app.get("/dataset/{file_name}")
+@app.get("/dataset/{file_name}/")
 async def read_file(file_name: str, page: int = Query(1), limit: int = Query(10)):
     start_index = (page-1)*limit
     end_index = page*limit
