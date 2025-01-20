@@ -55,7 +55,7 @@ app.add_middleware(
 async def read_root():
     return {"message": "Welcome to the backend!"}
 
-@app.post('/set-cookie')
+@app.post('/set-cookie/')
 async def set_cookie(response: Response, request: Request):
     delete_old_files(QUERY_DIR, 60 * 60 * 24)  # Delete files older than 24 hours
     session_id = request.cookies.get("sessionId")
@@ -66,6 +66,7 @@ async def set_cookie(response: Response, request: Request):
             value=session_id, 
             max_age=60*60*24,   # Expiration in seconds
             path="/",
+            httponly=True,
             secure=True,
         )
     return session_id
