@@ -34,10 +34,18 @@ app.mount("/uploads/mapper", StaticFiles(directory=mapper_directory), name="mapp
 app.mount("/uploads/query", StaticFiles(directory=query_directory), name="query")
 app.mount("/uploads/query_result", StaticFiles(directory=query_result_directory), name="query_result")
 
+# Define origins based on the environment
+development_origins = ["http://localhost:3000"]
+production_origins = ["https://algeo02-23054.vercel.app"]
+
+is_production = ENVIRONMENT == "production"
+
+allowed_origins = production_origins if is_production else development_origins
+
 # CORS setup for communication with frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # React/Next.js origin
+    allow_origins=allowed_origins,  # React/Next.js origin
     allow_credentials=True,  # Allows cookies to be included
     allow_methods=["*"],
     allow_headers=["*"],

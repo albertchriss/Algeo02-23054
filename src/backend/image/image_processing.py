@@ -69,7 +69,7 @@ def find_means(data):
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                                                                                PCA
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def compute_pca_svd(data, num_components):
+def compute_pca_svd(data, num_components=20):
     """
     Performs PCA using Singular Value Decomposition (SVD).
     Args:
@@ -78,7 +78,7 @@ def compute_pca_svd(data, num_components):
     Returns:
         numpy array: Principal components (features x num_components).
     """
-    num_components = 20
+    num_components = min(num_components, min(data.shape[0], data.shape[1]) - 1)
     U, S, _ = svds(data, num_components, which = 'LM', return_singular_vectors="u")
     idx = np.argsort(S)[::-1]
     U = U[: , idx]

@@ -52,9 +52,9 @@ export const PopularAlbum = () => {
       <div className="w-full space-y-4">
         <h1 className="font-bold text-3xl text-biru-teks">Some Albums</h1>
         <div className="flex bg-white rounded-md shadow-md items-center justify-center overflow-hidden relative">
-          <div className="flex gap-10 rounded-md py-4 px-8 justify-center w-full h-full">
+          <div className="flex gap-10 rounded-md py-4 px-8 justify-evenly w-full h-full">
             {Array.from({ length: 3 }, (_, index) => index + 1).map((index) => (
-              <AlbumSkeleton key={index} />
+              <AlbumSkeleton key={index} className="flex-1 aspect-square max-w-[200px] overflow-hidden" showTitle={false}/>
             ))}
           </div>
         </div>
@@ -82,7 +82,6 @@ export const PopularAlbum = () => {
                 imgSrc={album.imgSrc}
                 title=""
                 divClassName="group-hover:-translate-x-[370%] transition-all duration-500 flex-1 aspect-square"
-                className=""
               />
             ))
           )}

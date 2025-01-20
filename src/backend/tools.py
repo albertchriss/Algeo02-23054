@@ -91,7 +91,7 @@ def is_valid_mapper(contents: str):
 
     # if there is a file in the dataset that is not mapped        
     for file in os.listdir(DATASET_DIR):
-        if (file not in mapper):
+        if (file not in mapper and (is_image_file(file) or is_midi_file(file))):
             return False, f"Invalid mapper. File {file} is not mapped!"
 
     return True, ""
