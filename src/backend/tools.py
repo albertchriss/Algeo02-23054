@@ -1,11 +1,20 @@
 import os
 from pathlib import Path
-import numpy as np
+import time
+import shutil
 
 DATASET_DIR = Path() / "uploads/dataset"
 MAPPER_DIR = Path() / "uploads/mapper"
 QUERY_DIR = Path() / "uploads/query"
 QUERY_RESULT_DIR = Path() / "uploads/query_result"
+
+def delete_old_files(directory: Path, age_limit_seconds: int):
+    now = time.time()
+    for item in directory.iterdir():
+        if item.is_dir():
+            creation_time = item.stat().st_mtime
+            if now - creation_time > age_limit_seconds:
+                shutil.rmtree(item)
 
 def delete_dataset(is_image: bool):
     for file in os.listdir(DATASET_DIR):
@@ -20,14 +29,14 @@ def delete_mapper():
         os.remove(MAPPER_DIR / file)
     return {"message": "Mapper deleted"}
 
-def delete_query():
-    for file in os.listdir(QUERY_DIR):
-        os.remove(QUERY_DIR / file)
+def delete_query(session_id):
+    for file in os.listdir(QUERY_DIR / session_id):
+        os.remove(QUERY_DIR / session_id / file)
     return {"message": "Query deleted"}
 
-def delete_query_result():
-    for file in os.listdir(QUERY_RESULT_DIR):
-        os.remove(QUERY_RESULT_DIR / file)
+def delete_query_result(session_id):
+    for file in os.listdir(QUERY_RESULT_DIR / session_id):
+        os.remove(QUERY_RESULT_DIR / session_id / file)
     return {"message": "Query result deleted"}
 
 def is_valid_mapper_format(files: list):

@@ -180,7 +180,7 @@ export const DatasetUpload = ({
         Upload a {types === "mapper" ? "txt" : "zip"} file
       </Label>
       <div
-        className={`${className} size-[300px] hover:cursor-pointer rounded-xl shadow-lg shadow-gray-300 `}
+        className={`${className} size-[280px] ${!isOnProduction && "hover:cursor-pointer"} rounded-xl shadow-lg shadow-gray-300 `}
         onClick={handleElementClick}
       >
         {file ? (
@@ -208,7 +208,7 @@ export const DatasetUpload = ({
       </Button>
       {types === "mapper" && (
         <Button
-          className="ml-4 px-9"
+          className="ml-4 px-7"
           disabled={isLoading || isOnProduction}
           onClick={handleOnClick}
         >

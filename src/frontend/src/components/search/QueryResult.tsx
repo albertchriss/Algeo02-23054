@@ -1,43 +1,12 @@
 "use client";
 
-import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
 import { ImageResult } from "./ImageResult";
 import { AudioResult } from "./AudioResult";
+import { useParameter } from "@/app/search/SearchContext";
 
 export const QueryResult = () => {
-  const [type, setType] = useState("image");
-  const { toast } = useToast();
-  useEffect(() => {
-    const fetchType = async () => {
-      try {
-        const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query/type/`;
-        const response = await fetch(endPoint, {
-          method: "GET",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setType(data.type);
-        } else {
-          const errorData = await response.json();
-          toast({
-            title: "Failed to fetch images",
-            description: errorData.detail,
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        toast({
-          title: "Failed to fetch images",
-          description: (error as Error).message,
-          variant: "destructive",
-        });
-      }
-    };
-    fetchType();
-  }, []);
-
-  if (type == "image") {
+  const { parameter } = useParameter();
+  if (parameter == "image") {
     return <ImageResult />;
   } else {
     return <AudioResult />;

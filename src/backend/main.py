@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Query, Form
-from fastapi import UploadFile, HTTPException
+from fastapi import FastAPI, Query, Form, Response, Request, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
@@ -7,12 +6,13 @@ from pathlib import Path
 import zipfile
 import io
 import os
+import time
+import joblib
+from uuid import uuid4
+from dotenv import load_dotenv
 from tools import *
 from image.image_processing import preProcessingDataSet, queryImage
 from audio.audioprocessing import process_query, preprocess_database
-import time
-import joblib
-from dotenv import load_dotenv
 
 load_dotenv()
 backend_url = os.getenv("BACKEND_URL")
@@ -38,6 +38,7 @@ app.mount("/uploads/query_result", StaticFiles(directory=query_result_directory)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # React/Next.js origin
+    allow_credentials=True,  # Allows cookies to be included
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -46,22 +47,41 @@ app.add_middleware(
 async def read_root():
     return {"message": "Welcome to the backend!"}
 
+@app.post('/set-cookie')
+async def set_cookie(response: Response, request: Request):
+    delete_old_files(QUERY_DIR, 60 * 60 * 24)  # Delete files older than 24 hours
+    session_id = request.cookies.get("sessionId")
+    if not session_id:
+        session_id = str(uuid4())
+        response.set_cookie(
+            key="sessionId", 
+            value=session_id, 
+            max_age=60*60*24,   # Expiration in seconds
+            path="/"
+        )
+    return session_id
+
 @app.post('/uploadquery/')
-async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...), limit: int = Query(12)):
+async def create_upload_query(file_upload: UploadFile, request: Request, response: Response, is_image: str = Form(...), limit: int = Query(12)):
     is_image = is_image.lower() == "true"
+    session_id = request.cookies.get("sessionId")
+    if not (QUERY_DIR / session_id).exists():
+        (QUERY_DIR / session_id).mkdir(parents=True, exist_ok=True)
+    if not (QUERY_RESULT_DIR / session_id).exists():
+        (QUERY_RESULT_DIR / session_id).mkdir(parents=True, exist_ok=True)
     try:
         contents = await file_upload.read()
     except:
         raise HTTPException(status_code=400, detail="Invalid file")
     async def processing_with_progress():
         try:
-            delete_query()
-            delete_query_result()
+            delete_query(session_id)
+            delete_query_result(session_id)
             file_name = file_upload.filename
             if (is_image_file(file_name) and is_image) or (is_midi_file(file_name) and not is_image):
-                extracted_file_path = QUERY_DIR / Path(file_name).name
+                
+                extracted_file_path = QUERY_DIR / session_id / Path(file_name).name
                 try:
-                    # contents = await file_upload.read()
                     with open(extracted_file_path, "wb") as extracted_file:
                         extracted_file.write(contents)
                 except:
@@ -76,7 +96,6 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 
                 if is_image:
                 # Start image processing and stream progress
-                    # result = queryImage([str(extracted_file_path)], DATASET_DIR)
                     generator = queryImage([str(extracted_file_path)], DATASET_DIR)
                     while True:
                         try:
@@ -105,7 +124,9 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                             result = stop_result.value
                             break
                 time_taken = time.time() - now
-                query_file_path = QUERY_RESULT_DIR / "result.txt"
+
+                
+                query_file_path = QUERY_RESULT_DIR / session_id / "result.txt"
                 
                 with open(query_file_path, "w", encoding="utf-8") as query_file:
                     for res in result[:limit]:
@@ -119,37 +140,25 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 return    
 
         except HTTPException as http_exc:
-            # Re-raise the HTTP exceptions that are meant to provide specific feedback
-            # raise http_exc
             yield f"data: error:{str(http_exc)}\n\n"  
             return
+        
         except Exception as exc:
-            # Catch any other exceptions and raise a generic HTTP exception
-            # raise HTTPException(status_code=400, detail="Invalid file")
             yield f"data: error:{str(exc)}\n\n" 
             return 
         
     return StreamingResponse(processing_with_progress(), media_type="text/event-stream")
 
-@app.get('/query/type/')
-async def get_query_type():
-    if (not os.listdir(QUERY_DIR)):
-        raise HTTPException(status_code=404, detail="No query found")
-    query_file = os.listdir(QUERY_DIR)[0]
-    if (is_image_file(query_file)):
-        return {"type": "image"}
-    else:
-        return {"type": "audio"}
-
 @app.get('/query/')
-async def get_query_result(is_image: bool = Query(0)):
+async def get_query_result(request: Request, response: Response, is_image: bool = Query(0)):
+    session_id = request.cookies.get("sessionId")
 
-    if (not os.listdir(QUERY_RESULT_DIR)):
+    if (not os.listdir(QUERY_RESULT_DIR / session_id)):
         raise HTTPException(status_code=404, detail="No query found")
 
-    query_file = os.listdir(QUERY_RESULT_DIR)[0]
+    query_file = os.listdir(QUERY_RESULT_DIR / session_id)[0]
 
-    with open(QUERY_RESULT_DIR / query_file, "r") as file_object:
+    with open(QUERY_RESULT_DIR / session_id / query_file, "r") as file_object:
         query_files = file_object.readlines()
 
     if (is_image):

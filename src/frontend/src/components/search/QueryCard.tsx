@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Progress } from "../ui/progress";
+import { useParameter } from "@/app/search/SearchContext";
 
 type QueryType = "image" | "audio";
 
@@ -17,6 +18,7 @@ interface QueryCardProps {
 }
 
 export const QueryCard = ({ types, children, className }: QueryCardProps) => {
+  const { setParameter } = useParameter();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +46,7 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    setParameter(types);
     e.preventDefault();
 
     const formData = new FormData();
@@ -60,9 +63,15 @@ export const QueryCard = ({ types, children, className }: QueryCardProps) => {
       setIsLoading(true);
       setProgress(0); // Initialize progress state
 
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/set-cookie/`, {
+        method: "POST",
+        credentials: "include",
+      });
+
       const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploadquery/`;
       const response = await fetch(endPoint, {
         method: "POST",
+        credentials: "include",
         body: formData,
       });
 

@@ -26,6 +26,7 @@ export const ImageResult = () => {
         const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query/?is_image=true`;
         const response = await fetch(endPoint, {
           method: "GET",
+          credentials: 'include'
         });
         if (response.ok) {
           const data = await response.json();

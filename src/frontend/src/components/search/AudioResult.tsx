@@ -22,6 +22,7 @@ export const AudioResult = () => {
         const endPoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query/?is_image=false`;
         const response = await fetch(endPoint, {
           method: "GET",
+          credentials: 'include',
         });
         if (response.ok) {
           const data = await response.json();

@@ -16,7 +16,7 @@ export default function UploadPage() {
           </h1>
         </div>
       )}
-      <div className={`flex w-full justify-around ${isOnProduction && "blur-md saturate-50"}`}>
+      <div className={`flex w-full justify-evenly ${isOnProduction && "blur-md saturate-50"}`}>
         <DatasetUpload
           types="image"
           className="flex items-center justify-center border-cyan-tua border-[5px]"

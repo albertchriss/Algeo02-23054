@@ -49,12 +49,14 @@ export const PopularAlbum = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full overflow-hidden space-y-4 py-2">
+      <div className="w-full space-y-4">
         <h1 className="font-bold text-3xl text-biru-teks">Some Albums</h1>
-        <div className="flex gap-10">
-          {Array.from({ length: 3 }, (_, index) => index + 1).map((index) => (
-            <AlbumSkeleton key={index} />
-          ))}
+        <div className="flex bg-white rounded-md shadow-md items-center justify-center overflow-hidden relative">
+          <div className="flex gap-10 rounded-md py-4 px-8 justify-center w-full h-full">
+            {Array.from({ length: 3 }, (_, index) => index + 1).map((index) => (
+              <AlbumSkeleton key={index} />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -68,7 +70,7 @@ export const PopularAlbum = () => {
         href="/album"
         className="flex bg-white rounded-md shadow-md items-center justify-center group overflow-hidden relative hover:bg-cyan-tua/20 transition-all duration-500"
       >
-        <div className="flex gap-10 rounded-md pt-4 px-8 justify-center w-full h-full">
+        <div className="flex gap-10 rounded-md py-4 px-8 justify-evenly w-full h-full">
           {uploadedImages.length === 0 ? (
             <div className="h-[200px] w-full flex justify-center items-center group-hover:-translate-x-[370%] transition-all duration-500">
               <p className="text-gray-400 italic">No Albums yet.</p>
@@ -79,7 +81,8 @@ export const PopularAlbum = () => {
                 key={index}
                 imgSrc={album.imgSrc}
                 title=""
-                divClassName="group-hover:-translate-x-[370%] transition-all duration-500"
+                divClassName="group-hover:-translate-x-[370%] transition-all duration-500 flex-1 aspect-square"
+                className=""
               />
             ))
           )}

@@ -14,16 +14,17 @@ const Album = async ({ params }: { params: Promise<{ name: string }> }) => {
             alt={name}
             width={1000}
             height={1000}
-            className="blur-lg absolute w-full aspect-square z-[-100] rounded-2xl object-cover"
+            className="blur-lg absolute w-full aspect-square z-[-100] rounded-2xl object-cover saturate-50"
           />
+          <div className="w-full h-full bg-black/20 absolute"></div>
           <Image
             src={imageUrl}
             alt={name}
             width={1000}
             height={1000}
-            className="size-[200px] rounded-2xl object-cover ml-[100px]"
+            className="size-[200px] rounded-2xl object-cover ml-[100px] z-10"
           />
-          <div className=" ml-[4%] max-w-[50%]">
+          <div className=" ml-[4%] max-w-[50%] z-10">
             <h1 className="text-4xl font-bold text-white break-all">
               {name.substring(0, name.lastIndexOf("."))}
             </h1>
