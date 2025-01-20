@@ -26,7 +26,7 @@ def get_image_paths(directory):
     """
     supported_extensions = ('.jpg', '.jpeg', '.png')  # Add more extensions if needed
     image_paths = [
-        os.path.join(directory, file)
+        os.path.join(directory, file).replace("\\", "/")
         for file in os.listdir(directory)
         if file.lower().endswith(supported_extensions)
     ]

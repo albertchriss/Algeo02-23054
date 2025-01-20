@@ -101,15 +101,12 @@ def preprocess_database(dataset_path):
     # # Collect MIDI files from the selected folders
     midi_files = []
 
-    # for folder in all_folders:
-    folder_path = dataset_path
-    for root, dirs, files in os.walk(folder_path):
-        for file in files:
-            if file.endswith('.mid') and file.count('.') == 1:
-                # Use os.path.join(root, file) directly
-                midi_files.append(os.path.join(root, file))
+    midi_files = [
+        os.path.join(dataset_path, file).replace("\\", "/")
+        for file in os.listdir(dataset_path)
+        if file.lower().endswith('.mid')
+    ]
 
-    midi_files = midi_files
     all_vect_hist = {}
     # Loop melalui semua file MIDI
     for midi_file in midi_files:

@@ -108,6 +108,7 @@ async def create_upload_query(file_upload: UploadFile, is_image: str = Form(...)
                 
                 with open(query_file_path, "w", encoding="utf-8") as query_file:
                     for res in result[:limit]:
+                        print(res['filename'])
                         file_name_only = Path(res['filename']).name
                         query_file.write(f"{file_name_only} {res['score']}\n")
                     query_file.write(str(time_taken) + "\n")
