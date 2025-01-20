@@ -65,7 +65,8 @@ async def set_cookie(response: Response, request: Request):
             key="sessionId", 
             value=session_id, 
             max_age=60*60*24,   # Expiration in seconds
-            path="/"
+            path="/",
+            secure=True,
         )
     return session_id
 
